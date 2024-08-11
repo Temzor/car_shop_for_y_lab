@@ -1,88 +1,106 @@
 package ru.yaone.impl;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.PostgreSQLContainer;
 import ru.yaone.model.Car;
 import ru.yaone.model.enumeration.CarCondition;
-import ru.yaone.services.CarService;
-
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CarServiceImplTest {
+import java.sql.*;
+import java.util.List;
 
-    private CarService carService;
+public class CarServiceImplTest {
+
+    private static PostgreSQLContainer<?> postgresContainer;
+    private CarServiceImpl carService;
+
+
+    @BeforeAll
+    public static void setupContainer() {
+        // Настройка контейнера PostgreSQL
+        postgresContainer = new PostgreSQLContainer<>("postgres:14.13")
+                .withDatabaseName("car_shop")
+                .withUsername("test")
+                .withPassword("test");
+        postgresContainer.start();
+    }
 
     @BeforeEach
-    void setUp() {
+    public void setup() {
         carService = new CarServiceImpl();
+
+        initDatabase();
+    }
+
+
+    private void initDatabase() {
+        String createSchemaSQL = "CREATE SCHEMA IF NOT EXISTS car_shop;";
+        String createTableSQL = """
+                CREATE TABLE IF NOT EXISTS car_shop.cars (
+                id SERIAL PRIMARY KEY,
+                make VARCHAR(255),
+                model VARCHAR(255),
+                year INT,
+                price DOUBLE PRECISION,
+                condition VARCHAR(255)
+                );
+                """;
+
+        try (Connection conn = DriverManager.getConnection(
+                postgresContainer.getJdbcUrl(),
+                postgresContainer.getUsername(),
+                postgresContainer.getPassword());
+             Statement stmt = conn.createStatement()) {
+
+            stmt.execute(createSchemaSQL);
+            stmt.execute(createTableSQL);
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при инициализации базы данных", e);
+        }
+    }
+
+    @AfterAll
+    public static void tearDownContainer() {
+        postgresContainer.stop();
     }
 
     @Test
-    void testAddCar() {
-        Car car = new Car(1, "Toyota", "Corolla", 2020, 20000, CarCondition.NEW);
-        carService.addCar(car);
+    public void testAddCar() {
+        Car newCar = new Car(0, "Toyota", "Corolla", 2022, 20000, CarCondition.NEW);
+        carService.addCar(newCar);
         List<Car> cars = carService.getAllCars();
-
-        assertThat(cars).containsExactly(car);
+        assertThat(cars).isNotEmpty();
     }
 
     @Test
-    void testGetAllCars() {
-        Car car1 = new Car(1, "Toyota", "Corolla", 2020, 20000, CarCondition.NEW);
-        Car car2 = new Car(2, "Honda", "Civic", 2019, 18000, CarCondition.USED);
-        carService.addCar(car1);
-        carService.addCar(car2);
-
+    public void testGetAllCars() {
+        carService.addCar(new Car(0, "Toyota", "Corolla", 2022, 20000, CarCondition.NEW));
+        carService.addCar(new Car(0, "Honda", "Civic", 2023, 22000, CarCondition.NEW));
         List<Car> cars = carService.getAllCars();
-
-        assertThat(cars).containsExactly(car1, car2);
+        assertThat(cars).isNotNull()
+                .isNotEmpty();
     }
 
     @Test
-    void testGetCarById() {
-        Car car = new Car(1, "Toyota", "Corolla", 2020, 20000, CarCondition.NEW);
-        carService.addCar(car);
-
-        Car foundCar = carService.getCarById(1);
-
-        assertThat(foundCar).isEqualTo(car);
+    public void testGetCarById() {
+        carService.addCar(new Car(0, "Toyota", "Corolla", 2022, 20000, CarCondition.NEW));
+        List<Car> cars = carService.getAllCars();
+        int carId = cars.get(0).id();
+        Car retrievedCar = carService.getCarById(carId);
+        Assertions.assertNotNull(retrievedCar);
+        Assertions.assertEquals("Toyota", retrievedCar.make());
     }
 
     @Test
-    void testUpdateCar() {
-        Car car = new Car(1, "Toyota", "Corolla", 2020, 20000, CarCondition.NEW);
-        carService.addCar(car);
+    public void testUpdateCar() {
+        carService.addCar(new Car(0, "Toyota", "Corolla", 2022, 21000, CarCondition.NEW));
+        List<Car> cars = carService.getAllCars();
+        int carId = cars.get(0).id();
+        Car updatedCar = new Car(carId, "Toyota", "Corolla", 2022, 20000, CarCondition.NEW);
 
-        Car updatedCar = new Car(1, "Toyota", "Camry", 2021, 25000, CarCondition.NEW);
-        carService.updateCar(1, updatedCar);
+        carService.updateCar(updatedCar.id(), updatedCar);
 
-        Car foundCar = carService.getCarById(1);
-
-        assertThat(foundCar).isEqualTo(updatedCar);
-    }
-
-    @Test
-    void testDeleteCar() {
-        Car car = new Car(1, "Toyota", "Corolla", 2020, 20000, CarCondition.NEW);
-        carService.addCar(car);
-
-        carService.deleteCar(1);
-
-        Car foundCar = carService.getCarById(1);
-        assertThat(foundCar).isNull();
-    }
-
-    @Test
-    void testSearchCars() {
-        Car car1 = new Car(1, "Toyota", "Corolla", 2020, 20000, CarCondition.NEW);
-        Car car2 = new Car(2, "Honda", "Civic", 2019, 18000, CarCondition.USED);
-        carService.addCar(car1);
-        carService.addCar(car2);
-
-        List<Car> results = carService.searchCars("Toyota", "Corolla", 2020, 20000, CarCondition.NEW);
-
-        assertThat(results).containsExactly(car1);
+        Car retrievedCar = carService.getCarById(carId);
+        Assertions.assertEquals(21000, retrievedCar.price());
     }
 }

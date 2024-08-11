@@ -54,7 +54,7 @@ public interface OrderService {
      *
      * @param id идентификатор заказа, который необходимо удалить
      */
-    void deleteOrder(int id);
+    void deleteOrderById(int id);
 
     /**
      * Ищет заказы по заданным критериям.

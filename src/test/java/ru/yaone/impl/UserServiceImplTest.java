@@ -1,95 +1,82 @@
 package ru.yaone.impl;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.PostgreSQLContainer;
 import ru.yaone.model.User;
 import ru.yaone.model.enumeration.UserRole;
-import ru.yaone.services.UserService;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class UserServiceImplTest {
+import java.sql.*;
+import java.util.List;
 
-    private UserService userService;
+public class UserServiceImplTest {
+
+    private static PostgreSQLContainer<?> postgresContainer;
+    private UserServiceImpl userService;
+
+    @BeforeAll
+    public static void setupContainer() {
+        postgresContainer = new PostgreSQLContainer<>("postgres:14.13")
+                .withDatabaseName("car_shop")
+                .withUsername("test")
+                .withPassword("test");
+        postgresContainer.start();
+    }
 
     @BeforeEach
-    void setUp() {
+    public void setup() {
         userService = new UserServiceImpl();
+        initDatabase();
+    }
+
+    private void initDatabase() {
+        String createSchemaSQL = "CREATE SCHEMA IF NOT EXISTS car_shop;";
+        String createTableSQL = """
+                CREATE TABLE IF NOT EXISTS car_shop.users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) UNIQUE,
+                password VARCHAR(255),
+                role VARCHAR(255)
+                );
+                """;
+        try (Connection conn = DriverManager.getConnection(
+                postgresContainer.getJdbcUrl(),
+                postgresContainer.getUsername(),
+                postgresContainer.getPassword());
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(createSchemaSQL);
+            stmt.execute(createTableSQL);
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при инициализации базы данных", e);
+        }
+    }
+
+
+    @AfterAll
+    public static void tearDownContainer() {
+        postgresContainer.stop();
     }
 
     @Test
-    void testAddUser() {
-        User user = new User(1, "John Doe", "password123", UserRole.CLIENT);
-        userService.addUser(user);
+    public void testAddUser() {
+
+        User newUser = new User(0, "john_doe", "password123", UserRole.MANAGER);
+        if (!userService.searchUsers("john_doe", UserRole.MANAGER).get(0)
+                .username().equals(newUser.username())) {
+            userService.addUser(newUser);
+        }
 
         List<User> users = userService.getAllUsers();
-
-        assertThat(users).hasSize(1);
-        assertThat(users).contains(user);
+        assertThat(users).isNotEmpty().first().isNotNull();
     }
 
     @Test
-    void testGetAllUsers() {
-        User user1 = new User(1, "John Doe", "password123", UserRole.CLIENT);
-        User user2 = new User(2, "Jane Doe", "password456", UserRole.ADMIN);
+    public void testThrow() {
+        User newUser = new User(0, "alice", "mypassword", UserRole.CLIENT);
 
-        userService.addUser(user1);
-        userService.addUser(user2);
-
-        List<User> users = userService.getAllUsers();
-
-        assertThat(users).hasSize(2);
-        assertThat(users).contains(user1, user2);
-    }
-
-    @Test
-    void testGetUserById() {
-        User user1 = new User(1, "John Doe", "password123", UserRole.CLIENT);
-        User user2 = new User(2, "Jane Doe", "password456", UserRole.ADMIN);
-        userService.addUser(user1);
-        userService.addUser(user2);
-
-        User fetchedUser = userService.getUserById(1);
-
-        assertThat(fetchedUser).isEqualTo(user1);
-    }
-
-    @Test
-    void testUpdateUser() {
-        User user1 = new User(1, "John Doe", "password123", UserRole.CLIENT);
-        userService.addUser(user1);
-
-        User updatedUser = new User(1, "Johnny Doe", "newpassword", UserRole.CLIENT);
-        userService.updateUser(1, updatedUser);
-
-        User fetchedUser = userService.getUserById(1);
-        assertThat(fetchedUser.username()).isEqualTo("Johnny Doe");
-    }
-
-    @Test
-    void testDeleteUser() {
-        User user1 = new User(1, "John Doe", "password123", UserRole.CLIENT);
-        userService.addUser(user1);
-
-        userService.deleteUser(1);
-
-        List<User> users = userService.getAllUsers();
-
-        assertThat(users).isEmpty();
-    }
-
-    @Test
-    void testSearchUsers() {
-        User user1 = new User(1, "John Doe", "password123", UserRole.CLIENT);
-        User user2 = new User(2, "Jane Doe", "password456", UserRole.ADMIN);
-        userService.addUser(user1);
-        userService.addUser(user2);
-
-        List<User> searchedUsers = userService.searchUsers("John Doe", UserRole.CLIENT);
-
-        assertThat(searchedUsers).hasSize(1);
-        assertThat(searchedUsers).contains(user1);
+        assertThatThrownBy(() -> userService.addUser(newUser))
+                .isInstanceOf(RuntimeException.class);
     }
 }

@@ -1,9 +1,8 @@
 package ru.yaone.app;
 
-import ru.yaone.impl.AuditServiceImpl;
-import ru.yaone.impl.CarServiceImpl;
-import ru.yaone.impl.OrderServiceImpl;
-import ru.yaone.impl.UserServiceImpl;
+import lombok.Getter;
+import lombok.Setter;
+import ru.yaone.impl.*;
 import ru.yaone.model.Car;
 import ru.yaone.model.Client;
 import ru.yaone.model.Order;
@@ -11,10 +10,7 @@ import ru.yaone.model.User;
 import ru.yaone.model.enumeration.CarCondition;
 import ru.yaone.model.enumeration.OrderStatus;
 import ru.yaone.model.enumeration.UserRole;
-import ru.yaone.services.AuditService;
-import ru.yaone.services.CarService;
-import ru.yaone.services.OrderService;
-import ru.yaone.services.UserService;
+import ru.yaone.services.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -30,12 +26,15 @@ import java.util.Scanner;
  * Внутри класса используются службы для работы с автомобилями, заказами, пользователями и аудиторией.
  * </p>
  */
+@Setter
+@Getter
 public class CarShopApp {
-    private final Scanner scanner = new Scanner(System.in);
+    Scanner scanner = new Scanner(System.in);
     private final CarService carService = new CarServiceImpl();
     private final OrderService orderService = new OrderServiceImpl();
-    private final UserService userService = new UserServiceImpl();
-    private final AuditService auditService = new AuditServiceImpl();
+    UserService userService = new UserServiceImpl();
+    AuditService auditService = new AuditServiceImpl();
+    ClientService clientService = new ClientServiceImpl();
     User loggedInUser;
 
     /**
@@ -60,6 +59,7 @@ public class CarShopApp {
      * </p>
      */
     public void showMainMenu() {
+        Scanner scanner = new Scanner(System.in);
         while (true) {
             try {
                 System.out.println("1. Вход");
@@ -71,7 +71,10 @@ public class CarShopApp {
                 switch (choice) {
                     case 1 -> login();
                     case 2 -> register();
-                    case 3 -> System.exit(0);
+                    case 3 -> {
+                        System.out.println("Выход из приложения.");
+                        return;
+                    }
                     default -> System.out.println("Не верный выбор, попробуйте еще раз.");
                 }
             } catch (InputMismatchException e) {
@@ -91,7 +94,7 @@ public class CarShopApp {
      * В противном случае выводится сообщение о неверных данных.
      * </p>
      */
-    private void login() {
+    void login() {
         try {
             System.out.print("Введите имя пользователя: ");
             String username = scanner.nextLine();
@@ -121,23 +124,26 @@ public class CarShopApp {
      * В случае ошибок ввода пользователю выводится соответствующее сообщение.
      * </p>
      */
-    private void register() {
+    void register() {
         try {
             System.out.print("Имя пользователя: ");
             String username = scanner.nextLine();
             System.out.print("Пароль пользователя: ");
             String password = scanner.nextLine();
-            System.out.println("Выберите роль: ");
-            System.out.println("1. ADMIN");
-            System.out.println("2. MANAGER");
+            System.out.print("Выберите роль: ");
+            System.out.print("1. ADMIN ");
+            System.out.print("2. MANAGER ");
             System.out.println("3. CLIENT");
             int roleChoice = scanner.nextInt();
             scanner.nextLine();
             UserRole role = UserRole.fromValue(roleChoice);
-            User user = new User(0, username, password, role);
+            User user = new User(1, username, password, role);
             userService.addUser(user);
-            auditService.logAction(user, "Зарегистрирован новый пользователь.");
-            System.out.println("Пользователь успешно зарегистрирован.");
+            if (user.id() > 0) {
+                auditService.logAction(user, "Зарегистрирован новый пользователь.");
+            } else {
+                System.out.println("Ошибка регистрации: пользователь не был добавлен в систему.");
+            }
         } catch (InputMismatchException e) {
             System.out.println("Ошибка ввода. Пожалуйста, попробуйте снова.");
             scanner.nextLine();
@@ -202,35 +208,48 @@ public class CarShopApp {
     }
 
     /**
-     * **Отображает меню менеджера.**
-     * <p>
-     * Метод предоставляет менеджеру возможности управления автомобилями, просмотра
-     * заказов или выхода из меню.
-     * </p>
-     * <p>
-     * Пользователю предлагается выполнить одно из следующих действий:
+     * Отображает главное меню для менеджера и обрабатывает выбор действий.
+     * В этом меню менеджер может управлять автомобилями, клиентами, просматривать
+     * заказы, искать заказы или выйти из системы.
+     *
+     * <p>Меню отображает следующий список опций:</p>
      * <ol>
-     *     <li>Управление автомобилями</li>
-     *     <li>Посмотреть заказы</li>
-     *     <li>Поиск заказов</li>
-     *     <li>Выход</li>
+     *   <li>Управление автомобилями</li>
+     *   <li>Управление клиентами</li>
+     *   <li>Просмотр заказов</li>
+     *   <li>Поиск заказов</li>
+     *   <li>Выход</li>
      * </ol>
-     * </p>
+     *
+     * <p>Пользовательский ввод обрабатывается с помощью класса {@code Scanner}.
+     * Если пользователь вводит недопустимый выбор, отображается сообщение об ошибке
+     * и меню повторяется.</p>
+     *
+     * <p>При выборе пункта 5 (выход) метод устанавливает {@code loggedInUser} в {@code null}
+     * и завершает выполнение метода.</p>
+     *
+     * @see #manageCars()
+     * @see #manageClients()
+     * @see #viewOrders()
+     * @see #searchOrders()
      */
+
     private void showManagerMenu() {
         while (true) {
             System.out.println("1. Управление автомобилями");
-            System.out.println("2. Посмотреть заказы");
-            System.out.println("3. Поиск заказов");
-            System.out.println("4. Выход");
+            System.out.println("2. Управление клиентами");
+            System.out.println("3. Посмотреть заказы");
+            System.out.println("4. Поиск заказов");
+            System.out.println("5. Выход");
             System.out.print("Выберите действие: ");
             int choice = scanner.nextInt();
             scanner.nextLine();
             switch (choice) {
                 case 1 -> manageCars();
-                case 2 -> viewOrders();
-                case 3 -> searchOrders();
-                case 4 -> {
+                case 2 -> manageClients();
+                case 3 -> viewOrders();
+                case 4 -> searchOrders();
+                case 5 -> {
                     loggedInUser = null;
                     return;
                 }
@@ -322,11 +341,9 @@ public class CarShopApp {
      * </p>
      */
     private void viewUsers() {
-        userService.getAllUsers().forEach(user -> {
-            System.out.println("ID: " + user.id()
-                    + ", Имя пользователя: " + user.username()
-                    + ", Роль пользователя: " + user.role());
-        });
+        userService.getAllUsers().forEach(user -> System.out.println("ID: " + user.id()
+                + ", Имя пользователя: " + user.username()
+                + ", Роль пользователя: " + user.role()));
     }
 
     /**
@@ -409,7 +426,6 @@ public class CarShopApp {
 
         userService.deleteUser(id);
         auditService.logAction(new User(id, "", "", null), "Пользователь удален");
-        System.out.println("Пользователь успешно удален.");
     }
 
     /**
@@ -457,6 +473,55 @@ public class CarShopApp {
     }
 
     /**
+     * Предоставляет меню для управления клиентами в системе.
+     * Меню позволяет просматривать, добавлять, редактировать и удалять клиентов,
+     * а также возвращаться в главное меню.
+     *
+     * <p>Меню отображает следующие опции:</p>
+     * <ol>
+     *   <li>Просмотр клиентов</li>
+     *   <li>Добавить клиента</li>
+     *   <li>Редактировать клиента</li>
+     *   <li>Удалить клиента</li>
+     *   <li>Вернуться в главное меню</li>
+     * </ol>
+     *
+     * <p>Пользовательский ввод обрабатывается с помощью класса {@code Scanner}.
+     * Если пользователь вводит недопустимый выбор, выводится сообщение об ошибке,
+     * и меню повторяется.</p>
+     *
+     * <p>При выборе пункта 5 (вернуться в главное меню) метод завершает свое выполнение
+     * и возвращает управление в предыдущее меню.</p>
+     *
+     * @see #viewClients()
+     * @see #addClient()
+     * @see #editClient()
+     * @see #deleteClient()
+     */
+    private void manageClients() {
+        while (true) {
+            System.out.println("1. Просмотр клиентов");
+            System.out.println("2. Добавить клиента");
+            System.out.println("3. Редактировать клиента");
+            System.out.println("4. Удалить клиента");
+            System.out.println("5. Вернуться в главное меню");
+            System.out.print("Выберите действие: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+            switch (choice) {
+                case 1 -> viewClients();
+                case 2 -> addClient();
+                case 3 -> editClient();
+                case 4 -> deleteClient();
+                case 5 -> {
+                    return;
+                }
+                default -> System.out.println("Выбор не верен. Попробуйте еще раз.");
+            }
+        }
+    }
+
+    /**
      * **Просмотр автомобилей.**
      * <p>
      * Метод выводит список всех автомобилей в системе в формате "ID: [id], Марка: [make], Модель: [model],
@@ -464,14 +529,35 @@ public class CarShopApp {
      * </p>
      */
     void viewCars() {
-        carService.getAllCars().forEach(car -> {
-            System.out.println("ID: " + car.id()
-                    + ", Марка: " + car.make()
-                    + ", Модель: " + car.model()
-                    + ", Год производства: " + car.year()
-                    + ", Цена: " + car.price()
-                    + ", Состояние: " + car.condition());
-        });
+        carService.getAllCars().forEach(car -> System.out.println("ID: " + car.id()
+                + ", Марка: " + car.make()
+                + ", Модель: " + car.model()
+                + ", Год производства: " + car.year()
+                + ", Цена: " + car.price()
+                + ", Состояние: " + car.condition()));
+    }
+
+    /**
+     * Выводит список всех клиентов системы в консоль.
+     *
+     * <p>Метод использует {@code clientService} для получения всех клиентов
+     * и отображает их информацию в формате:</p>
+     * <ul>
+     *   <li>ID: <клиент.id></li>
+     *   <li>ФИО клиента: <клиент.clientName></li>
+     *   <li>Контактная информация: <клиент.contactInfo></li>
+     * </ul>
+     *
+     * <p>Каждый клиент отображается на отдельной строчке.
+     * Метод не возвращает никаких значений и предназначен исключительно
+     * для вывода информации на экран.</p>
+     *
+     * @see ClientService
+     */
+    void viewClients() {
+        clientService.getAllClients().forEach(client -> System.out.println("ID: " + client.id()
+                + ", ФИО клиента: " + client.clientName()
+                + ", Контактная информация: " + client.contactInfo()));
     }
 
     /**
@@ -483,7 +569,7 @@ public class CarShopApp {
      * Также записывается действие в журнал аудита.
      * </p>
      */
-    void addCar() {
+    public void addCar() {
         System.out.print("Марка: ");
         String make = scanner.nextLine();
         System.out.print("Модель: ");
@@ -500,6 +586,38 @@ public class CarShopApp {
         carService.addCar(car);
         auditService.logAction(loggedInUser, "Новый автомобиль добавлен");
         System.out.println("Автомобиль добавлен успешно.");
+    }
+
+    /**
+     * Добавляет нового клиента в систему.
+     *
+     * <p>Метод запрашивает у пользователя ввод ФИО клиента и контактной информации,
+     * создаёт новый объект {@link Client} с указанными данными и добавляет
+     * его в систему с помощью {@link ClientService}. После успешного
+     * добавления клиента, действие логируется с помощью
+     * {@link AuditService}, фиксируя, что новый клиент был добавлен
+     * текущим пользователем.</p>
+     *
+     * <p>Если добавление прошло успешно, пользователю выводится сообщение
+     * о том, что клиент добавлен.</p>
+     *
+     * <p>Метод считывает ввод пользователя с использованием
+     * {@link Scanner}.</p>
+     *
+     * @see Client
+     * @see ClientService#addClient(Client)
+     * @see AuditService#logAction(User, String) (String, String)
+     */
+    public void addClient() {
+        System.out.print("ФИО клиента: ");
+        String clientName = scanner.nextLine();
+        System.out.print("Контактная информация клиента: ");
+        String clientInformation = scanner.nextLine();
+
+        Client client = new Client(0, clientName, clientInformation);
+        clientService.addClient(client);
+        auditService.logAction(loggedInUser, "Новый клиент добавлен");
+        System.out.println("Клиент добавлен успешно.");
     }
 
     /**
@@ -556,6 +674,50 @@ public class CarShopApp {
     }
 
     /**
+     * Редактирует информацию о существующем клиенте в системе.
+     *
+     * <p>Метод запрашивает у пользователя ввод ID клиента, который нужно
+     * отредактировать. Если клиент с указанным ID существует, пользователю
+     * предлагается ввести новое ФИО и новую контактную информацию.
+     * Далее создаётся обновлённый объект {@link Client} с указанными
+     * данными, который передаётся в {@link ClientService} для обновления.
+     * Действие логируется с помощью {@link AuditService}, фиксируя, что
+     * информация о клиенте была отредактирована текущим пользователем.</p>
+     *
+     * <p>После успешного редактирования пользователю выводится сообщение
+     * о том, что редактирование прошло успешно. Если клиент с указанным
+     * ID не найден, пользователю отображается соответствующее сообщение.</p>
+     *
+     * <p>Метод считывает ввод от пользователя с использованием
+     * {@link Scanner}.</p>
+     *
+     * @see Client
+     * @see ClientService#getClientById(int)
+     * @see ClientService#updateClient(int, Client)
+     * @see AuditService#logAction(User, String) (String, String)
+     */
+    void editClient() {
+        System.out.print("Введите ID клиента для редактирования: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        Client client = clientService.getClientById(id);
+
+        if (client != null) {
+            System.out.print("Новое ФИО (Текущее ФИО клиента: " + client.clientName() + "): ");
+            String clientName = scanner.nextLine();
+            System.out.print("Новая контактная информация клиента (Текущая контактная информация: " + client.contactInfo() + "): ");
+            String clientInformation = scanner.nextLine();
+
+            Client updatedClient = new Client(id, clientName, clientInformation);
+            clientService.updateClient(id, updatedClient);
+            auditService.logAction(loggedInUser, "Клиент отредактирован");
+            System.out.println("Редактирование клиента прошло успешно.");
+        } else {
+            System.out.println("Клиент не найден.");
+        }
+    }
+
+    /**
      * **Удаление автомобиля.**
      * <p>
      * Метод запрашивает у пользователя ID автомобиля, который необходимо удалить.
@@ -579,9 +741,40 @@ public class CarShopApp {
         int id = scanner.nextInt();
         scanner.nextLine();
 
-        carService.deleteCar(id);
+        carService.deleteCarById(id);
         auditService.logAction(loggedInUser, "Автомобиль удален");
         System.out.println("Автомобиль удален успешно.");
+    }
+
+    /**
+     * Удаляет клиента из системы по указанному ID.
+     *
+     * <p>Метод запрашивает у пользователя ввод ID клиента, которого нужно
+     * удалить. После получения ID вызывается метод
+     * {@link ClientService#deleteClientById(int)}, который осуществляет
+     * удаление клиента из системы.</p>
+     *
+     * <p>Каждое удаление клиента логируется с помощью
+     * {@link AuditService}, фиксируя действие, выполненное текущим
+     * пользователем.</p>
+     *
+     * <p>После успешного удаления пользователю выводится сообщение
+     * о том, что клиент был успешно удалён.</p>
+     *
+     * <p>Метод считывает ввод от пользователя с использованием
+     * {@link Scanner}.</p>
+     *
+     * @see ClientService#deleteClientById(int)
+     * @see AuditService#logAction(User, String) (String, String)
+     */
+    void deleteClient() {
+        System.out.print("Введите ID клиента для удаления: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+
+        clientService.deleteClientById(id);
+        auditService.logAction(loggedInUser, "Клиент удален");
+        System.out.println("Клиент удален успешно.");
     }
 
     /**
@@ -624,14 +817,12 @@ public class CarShopApp {
         CarCondition condition = CarCondition.valueOf(scanner.nextLine().toUpperCase());
 
         List<Car> cars = carService.searchCars(make, model, year, price, condition);
-        cars.forEach(car -> {
-            System.out.println("ID: " + car.id()
-                    + ", Марка: " + car.make()
-                    + ", Модель: " + car.model()
-                    + ", Год производства: " + car.year()
-                    + ", Цена: " + car.price()
-                    + ", Состояние: " + car.condition());
-        });
+        cars.forEach(car -> System.out.println("ID: " + car.id()
+                + ", Марка: " + car.make()
+                + ", Модель: " + car.model()
+                + ", Год производства: " + car.year()
+                + ", Цена: " + car.price()
+                + ", Состояние: " + car.condition()));
     }
 
     /**
@@ -654,13 +845,11 @@ public class CarShopApp {
      * </p>
      */
     private void viewOrders() {
-        orderService.getAllOrders().forEach(order -> {
-            System.out.println("ID: " + order.id()
-                    + ", Клиент: " + order.client().user().username()
-                    + ", Автомобиль: " + order.car().make() + " " + order.car().model()
-                    + ", Дата: " + order.creationDate()
-                    + ", Статус: " + order.status());
-        });
+        orderService.getAllOrders().forEach(order -> System.out.println("ID: " + order.id()
+                + ", Клиент: " + order.client().clientName()
+                + ", Автомобиль: " + order.car().make() + " " + order.car().model()
+                + ", Дата: " + order.creationDate()
+                + ", Статус: " + order.status()));
     }
 
     /**
@@ -691,7 +880,7 @@ public class CarShopApp {
 
         Car car = carService.getCarById(carId);
         if (car != null) {
-            Client client = new Client(loggedInUser, "контактная информация");
+            Client client = new Client(0, loggedInUser.username(), "контактная информация");
             Order order = new Order(0, client, car, LocalDateTime.now(), OrderStatus.PENDING);
             orderService.addOrder(order);
             auditService.logAction(loggedInUser, "Заказ создан");
@@ -731,13 +920,11 @@ public class CarShopApp {
             LocalDateTime to = LocalDateTime.parse(scanner.nextLine() + "T23:59:59");
 
             List<Order> orders = orderService.searchOrders(from, to, null, null, null);
-            orders.forEach(order -> {
-                System.out.println("ID: " + order.id()
-                        + ", Клиент: " + order.client().user().username()
-                        + ", Автомобиль: " + order.car().make() + " " + order.car().model()
-                        + ", Дата: " + order.creationDate()
-                        + ", Статус: " + order.status());
-            });
+            orders.forEach(order -> System.out.println("ID: " + order.id()
+                    + ", Клиент: " + order.client().clientName()
+                    + ", Автомобиль: " + order.car().make() + " " + order.car().model()
+                    + ", Дата: " + order.creationDate()
+                    + ", Статус: " + order.status()));
         } catch (DateTimeParseException e) {
             System.out.println("Ошибка парсинга даты: " + e.getMessage());
         }
@@ -762,10 +949,8 @@ public class CarShopApp {
      * </p>
      */
     private void viewAuditLog() {
-        auditService.getAllLogs().forEach(log -> {
-            System.out.println("Timestamp: " + log.timestamp()
-                    + ", Пользователь: " + log.user().username()
-                    + ", Действие: " + log.action());
-        });
+        auditService.getAllLogs().forEach(log -> System.out.println("Timestamp: " + log.timestamp()
+                + ", Пользователь: " + log.user().username()
+                + ", Действие: " + log.action()));
     }
 }

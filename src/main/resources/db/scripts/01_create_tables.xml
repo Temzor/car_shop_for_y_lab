@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="temzor">
+        <createSequence schemaName="car_shop" sequenceName="users_id_seq" startValue="1"/>
+
+        <createTable tableName="users" schemaName="car_shop">
+            <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.users_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="liquibase (generated)">
+        <createSequence schemaName="car_shop" sequenceName="cars_id_seq" startValue="1"/>
+        <createTable tableName="cars" schemaName="car_shop">
+            <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.cars_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="make" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="model" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="year" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="condition" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="liquibase (generated)">
+        <createSequence schemaName="car_shop" sequenceName="clients_id_seq" startValue="1"/>
+        <createTable tableName="clients" schemaName="car_shop">
+            <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.clients_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="client_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_info" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="temzor (generated)">
+        <createSequence schemaName="car_shop" sequenceName="orders_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="5" author="liquibase (generated)">
+        <sql>
+            CREATE TABLE car_shop.orders
+            (
+                id            BIGINT DEFAULT nextval('car_shop.orders_id_seq') PRIMARY KEY NOT NULL,
+                client_id     BIGINT                                                       NOT NULL,
+                car_id        BIGINT                                                       NOT NULL,
+                creation_date TIMESTAMP                                                    NOT NULL,
+                status        VARCHAR(50)                                                  NOT NULL,
+                CONSTRAINT fk_orders_cars
+                    FOREIGN KEY (client_id) REFERENCES car_shop.clients (id),
+                FOREIGN KEY (car_id) REFERENCES car_shop.cars (id)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="6" author="liquibase (generated)">
+        <createSequence schemaName="car_shop" sequenceName="audit_logs_id_seq" startValue="1"/>
+        <createTable tableName="audit_logs" schemaName="car_shop">
+            <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.audit_logs_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="log_message" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="log_date" type="timestamp"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="7" author="liquibase (generated)">
+        <sql>
+            ALTER TABLE car_shop.audit_logs
+                ADD CONSTRAINT fk_audit_user
+                    FOREIGN KEY (user_id) REFERENCES car_shop.users (id) ON DELETE CASCADE;
+        </sql>
+    </changeSet>
+</databaseChangeLog>
