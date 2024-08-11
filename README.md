@@ -1,4 +1,9 @@
 # CarShop-Service
+Статус продвижения:
+
+[HW1](https://github.com/Temzor/car_shop_for_y_lab/pull/2)
+
+[HW2](https://github.com/Temzor/car_shop_for_y_lab/pull/3)
 
 ## Запуск проекта:
 
