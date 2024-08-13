@@ -30,12 +30,15 @@ import java.util.Scanner;
 @Getter
 public class CarShopApp {
     Scanner scanner = new Scanner(System.in);
-    private final CarService carService = new CarServiceImpl();
-    private final OrderService orderService = new OrderServiceImpl();
-    UserService userService = new UserServiceImpl();
-    AuditService auditService = new AuditServiceImpl();
-    ClientService clientService = new ClientServiceImpl();
     User loggedInUser;
+
+    ItemFactory carShopFactory = new CarShopFactory();
+
+    AuditService auditService = carShopFactory.getAuditService();
+    CarService carService = carShopFactory.getCarService();
+    ClientService clientService = carShopFactory.getClientService();
+    OrderService orderService = carShopFactory.getOrderService();
+    UserService userService = carShopFactory.getUserService();
 
     /**
      * **Запускает приложение.**

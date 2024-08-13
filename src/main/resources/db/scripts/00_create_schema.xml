@@ -6,8 +6,7 @@
 
     <changeSet id="1" author="your_name">
         <sql>
-            DROP SCHEMA car_shop;
-            CREATE SCHEMA car_shop;
+            CREATE SCHEMA IF NOT EXISTS car_shop;
         </sql>
     </changeSet>
 </databaseChangeLog>
