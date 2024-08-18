@@ -1,0 +1,8 @@
+<aspectj>
+    <weaver>
+        <include within="ru.yaone..*" /> <!-- Замените com.example.myapp на реальный пакет вашего приложения -->
+    </weaver>
+    <aspects>
+        <aspect name="ru.yaone.dodeleted.LoggingAspectPo" /> <!-- Замените com.example.myapp на реальный пакет вашего приложения -->
+    </aspects>
+</aspectj>

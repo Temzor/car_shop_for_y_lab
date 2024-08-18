@@ -6,6 +6,12 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet id="1" author="temzor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users" schemaName="car_shop"/>
+            </not>
+        </preConditions>
+
         <createSequence schemaName="car_shop" sequenceName="users_id_seq" startValue="1"/>
 
         <createTable tableName="users" schemaName="car_shop">
@@ -22,10 +28,42 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <setTableRemarks schemaName="car_shop"
+                         tableName="users"
+                         remarks="Таблица, хранящая информацию о пользователях системы."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="users"
+                          columnName="id"
+                          remarks="Уникальный идентификатор пользователя."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="users"
+                          columnName="username"
+                          remarks="Имя пользователя для входа в систему."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="users"
+                          columnName="password"
+                          remarks="Пароль пользователя, зашифрованный для безопасности."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="users"
+                          columnName="role"
+                          remarks="Роль пользователя, определяющая его права доступа."/>
     </changeSet>
 
+
     <changeSet id="2" author="liquibase (generated)">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="cars" schemaName="car_shop"/>
+            </not>
+        </preConditions>
+
         <createSequence schemaName="car_shop" sequenceName="cars_id_seq" startValue="1"/>
+
         <createTable tableName="cars" schemaName="car_shop">
             <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.cars_id_seq')">
                 <constraints primaryKey="true" nullable="false"/>
@@ -46,9 +84,48 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <setTableRemarks schemaName="car_shop"
+                         tableName="cars"
+                         remarks="Таблица, хранящая информацию о автомобилях."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="cars"
+                          columnName="id"
+                          remarks="Уникальный идентификатор автомобиля."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="cars"
+                          columnName="make"
+                          remarks="Марка автомобиля."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="cars"
+                          columnName="model"
+                          remarks="Модель автомобиля."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="cars"
+                          columnName="year"
+                          remarks="Год выпуска автомобиля."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="cars"
+                          columnName="price"
+                          remarks="Цена автомобиля."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="cars"
+                          columnName="condition"
+                          remarks="Состояние автомобиля (новый, подержанный и т.д.)."/>
     </changeSet>
 
     <changeSet id="3" author="liquibase (generated)">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="clients" schemaName="car_shop"/>
+            </not>
+        </preConditions>
         <createSequence schemaName="car_shop" sequenceName="clients_id_seq" startValue="1"/>
         <createTable tableName="clients" schemaName="car_shop">
             <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.clients_id_seq')">
@@ -61,52 +138,133 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <setTableRemarks schemaName="car_shop"
+                         tableName="clients"
+                         remarks="Таблица, хранящая информацию о клиентах."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="clients"
+                          columnName="id"
+                          remarks="Уникальный идентификатор клиента."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="clients"
+                          columnName="client_name"
+                          remarks="Имя клиента."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="clients"
+                          columnName="contact_info"
+                          remarks="Контактная информация клиента."/>
     </changeSet>
 
     <changeSet id="4" author="temzor (generated)">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="orders" schemaName="car_shop"/>
+            </not>
+        </preConditions>
+
         <createSequence schemaName="car_shop" sequenceName="orders_id_seq" startValue="1"/>
-    </changeSet>
 
-    <changeSet id="5" author="liquibase (generated)">
-        <sql>
-            CREATE TABLE car_shop.orders
-            (
-                id            BIGINT DEFAULT nextval('car_shop.orders_id_seq') PRIMARY KEY NOT NULL,
-                client_id     BIGINT                                                       NOT NULL,
-                car_id        BIGINT                                                       NOT NULL,
-                creation_date TIMESTAMP                                                    NOT NULL,
-                status        VARCHAR(50)                                                  NOT NULL,
-                CONSTRAINT fk_orders_cars
-                    FOREIGN KEY (client_id) REFERENCES car_shop.clients (id),
-                FOREIGN KEY (car_id) REFERENCES car_shop.cars (id)
-            );
-        </sql>
-    </changeSet>
-
-    <changeSet id="6" author="liquibase (generated)">
-        <createSequence schemaName="car_shop" sequenceName="audit_logs_id_seq" startValue="1"/>
-        <createTable tableName="audit_logs" schemaName="car_shop">
-            <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.audit_logs_id_seq')">
+        <createTable tableName="orders" schemaName="car_shop">
+            <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.orders_id_seq')">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="user_id" type="bigint">
+            <column name="client_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
-            <column name="log_message" type="varchar(255)">
+            <column name="car_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
-            <column name="log_date" type="timestamp"
-                    defaultValueComputed="CURRENT_TIMESTAMP">
+            <column name="creation_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <setTableRemarks schemaName="car_shop"
+                         tableName="orders"
+                         remarks="Таблица, хранящая информацию о заказах клиентов."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="orders"
+                          columnName="id"
+                          remarks="Уникальный идентификатор заказа."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="orders"
+                          columnName="client_id"
+                          remarks="Идентификатор клиента, сделавшего заказ."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="orders"
+                          columnName="car_id"
+                          remarks="Идентификатор автомобиля, заказанного клиентом."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="orders"
+                          columnName="creation_date"
+                          remarks="Дата и время создания заказа."/>
+
+        <setColumnRemarks schemaName="car_shop"
+                          tableName="orders"
+                          columnName="status"
+                          remarks="Статус заказа."/>
+    </changeSet>
+
+    <changeSet id="5" author="temzor (generated)">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists schemaName="car_shop" foreignKeyTableName="orders"
+                                            foreignKeyName="fk_orders_client"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableSchemaName="car_shop" baseTableName="orders" baseColumnNames="client_id"
+                                 referencedTableSchemaName="car_shop" referencedTableName="clients"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_orders_client"/>
+    </changeSet>
+
+    <changeSet id="6" author="temzor (generated)">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists schemaName="car_shop" foreignKeyTableName="orders"
+                                            foreignKeyName="fk_orders_cars"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableSchemaName="car_shop" baseTableName='orders' baseColumnNames="car_id"
+                                 referencedTableSchemaName="car_shop" referencedTableName="cars"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_orders_cars"/>
     </changeSet>
 
     <changeSet id="7" author="liquibase (generated)">
-        <sql>
-            ALTER TABLE car_shop.audit_logs
-                ADD CONSTRAINT fk_audit_user
-                    FOREIGN KEY (user_id) REFERENCES car_shop.users (id) ON DELETE CASCADE;
-        </sql>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="audit_log" schemaName="car_shop"/>
+            </not>
+        </preConditions>
+
+        <createSequence schemaName="car_shop" sequenceName="audit_log_id_seq" startValue="1"/>
+
+        <createTable tableName="audit_log" schemaName="car_shop">
+            <column name="id" type="bigint" defaultValueComputed="nextval('car_shop.audit_log_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="method_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="method_args" type="text"/>
+            <column name="execution_time" type="bigint"/>
+            <column name="result" type="text"/>
+            <column name="timestamp" type="timestamp"/>
+        </createTable>
+
+        <setTableRemarks schemaName="car_shop" tableName="audit_log"
+                         remarks="Таблица для хранения логов аудита приложений, включая методы вызовов, их аргументы и время выполнения."/>
     </changeSet>
 </databaseChangeLog>
