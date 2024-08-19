@@ -2,7 +2,6 @@ package ru.yaone.servlets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,13 +25,13 @@ import java.util.Set;
  * Сервлет для обработки HTTP запросов связанных с заказами.
  * <p>Обрабатывает запросы на получение списка всех заказов, получение заказа по идентификатору и добавление нового заказа.</p>
  */
-@Loggable
+@Loggable("Логирование класса OrderServlet")
+@Setter
 @WebServlet(name = "OrderServlet", urlPatterns = "/api/orders/*")
 public class OrderServlet extends HttpServlet {
 
-    @Setter
     private OrderService orderService = new OrderServiceImpl();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Конструктор, который инициализирует ObjectMapper и регистрирует модуль JavaTimeModule.
@@ -48,12 +47,12 @@ public class OrderServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest}, представляющий HTTP-запрос
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
-     * @throws ServletException если происходит ошибка при обработке сервлета
-     * @throws IOException      если происходит ошибка ввода/вывода
+     * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода OrderServlet.doGet")
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         response.setContentType("application/json; charset=UTF-8");
         String pathInfo = request.getPathInfo();
 
@@ -93,12 +92,12 @@ public class OrderServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest}, представляющий HTTP-запрос
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
-     * @throws ServletException если происходит ошибка при обработке сервлета
-     * @throws IOException      если происходит ошибка ввода/вывода
+     * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода OrderServlet.doPost")
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
         OrderDTO orderDTO = objectMapper.readValue(request.getInputStream(), OrderDTO.class);
@@ -140,6 +139,7 @@ public class OrderServlet extends HttpServlet {
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
      * @throws IOException если происходит ошибка ввода-вывода
      */
+    @Loggable("Логирование метода OrderServlet.doPut")
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -204,6 +204,7 @@ public class OrderServlet extends HttpServlet {
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
      * @throws IOException если происходит ошибка ввода-вывода
      */
+    @Loggable("Логирование метода OrderServlet.doDelete")
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws IOException {

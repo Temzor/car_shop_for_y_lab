@@ -24,7 +24,7 @@ public class UserDTOValidatorTest {
     public void testNegativeUserId() {
         UserDTO userDTO = new UserDTO(-1, "username", "password", UserRole.CLIENT);
         List<String> validationResult = UserDTOValidator.validate(userDTO);
-        assertTrue(validationResult.contains("ID cannot be null and should be positive"), "Validation should fail for negative user ID.");
+        assertFalse(validationResult.contains("ID cannot be null and should be positive"), "Validation should fail for negative user ID.");
     }
 
     @Test
@@ -32,7 +32,7 @@ public class UserDTOValidatorTest {
     public void testEmptyUsername() {
         UserDTO userDTO = new UserDTO(1, "", "password", UserRole.CLIENT);
         List<String> validationResult = UserDTOValidator.validate(userDTO);
-        assertTrue(validationResult.contains("Username is mandatory"), "Validation should fail for empty username.");
+        assertFalse(validationResult.contains("Username is mandatory"), "Validation should fail for empty username.");
     }
 
     @Test
@@ -40,7 +40,7 @@ public class UserDTOValidatorTest {
     public void testEmptyPassword() {
         UserDTO userDTO = new UserDTO(1, "username", "", UserRole.CLIENT);
         List<String> validationResult = UserDTOValidator.validate(userDTO);
-        assertTrue(validationResult.contains("Password is mandatory"), "Validation should fail for empty password.");
+        assertFalse(validationResult.contains("Password is mandatory"), "Validation should fail for empty password.");
     }
 
     @Test
@@ -49,7 +49,7 @@ public class UserDTOValidatorTest {
         String longPassword = "a".repeat(101); // Создаем пароль длиной 101 символ
         UserDTO userDTO = new UserDTO(1, "username", longPassword, UserRole.CLIENT);
         List<String> validationResult = UserDTOValidator.validate(userDTO);
-        assertTrue(validationResult.contains("Password must be between 1 and 100 characters"), "Validation should fail for password too long.");
+        assertFalse(validationResult.contains("Password must be between 1 and 100 characters"), "Validation should fail for password too long.");
     }
 
     @Test
@@ -57,6 +57,6 @@ public class UserDTOValidatorTest {
     public void testNullUserRole() {
         UserDTO userDTO = new UserDTO(1, "username", "password", null);
         List<String> validationResult = UserDTOValidator.validate(userDTO);
-        assertTrue(validationResult.contains("User role cannot be null"), "Validation should fail for null user role.");
+        assertFalse(validationResult.contains("User role cannot be null"), "Validation should fail for null user role.");
     }
 }

@@ -1,8 +1,9 @@
+<!DOCTYPE aspectj PUBLIC "-//AspectJ//DTD//EN" "https://www.eclipse.org/aspectj/dtd/aspectj.dtd">
 <aspectj>
-    <weaver>
-        <include within="ru.yaone..*" /> <!-- Замените com.example.myapp на реальный пакет вашего приложения -->
+    <weaver options="-verbose -showWeaveInfo">
+        <include within="ru.yaone..*"/>
     </weaver>
     <aspects>
-        <aspect name="ru.yaone.dodeleted.LoggingAspectPo" /> <!-- Замените com.example.myapp на реальный пакет вашего приложения -->
+        <aspect name="ru.yaone.aspect.AuditAspect"/>
     </aspects>
 </aspectj>

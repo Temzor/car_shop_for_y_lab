@@ -1,4 +1,4 @@
-package ru.yaone.constans;
+package ru.yaone.constants;
 
 /**
  * Класс {@code SqlScriptsForAudit} содержит SQL-скрипты, используемые для ведения аудита.

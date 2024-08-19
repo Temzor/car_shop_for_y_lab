@@ -1,7 +1,6 @@
 package ru.yaone.servlets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,13 +33,13 @@ import java.util.Set;
  * </ul>
  * </p>
  */
-@Loggable
+@Loggable("Логирование класса UserService")
+@Setter
 @WebServlet(name = "UserService", urlPatterns = "/api/users/*")
 public class UserServlet extends HttpServlet {
 
-    @Setter
     private UserService userService = new UserServiceImpl();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Обработка HTTP GET запросов.
@@ -52,11 +51,11 @@ public class UserServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest} с информацией о запросе
      * @param response объект {@link HttpServletResponse} для формирования ответа
-     * @throws ServletException если возникает ошибка при обработке запроса
-     * @throws IOException      если происходит ошибка ввода-вывода
+     * @throws IOException если происходит ошибка ввода-вывода
      */
+    @Loggable("Логирование метода UserService.doGet")
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
         String pathInfo = request.getPathInfo();
 
@@ -100,11 +99,11 @@ public class UserServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest} с информацией о запросе
      * @param response объект {@link HttpServletResponse} для формирования ответа
-     * @throws ServletException если возникает ошибка при обработке запроса
-     * @throws IOException      если происходит ошибка ввода-вывода
+     * @throws IOException если происходит ошибка ввода-вывода
      */
+    @Loggable("Логирование метода UserService.doPost")
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
         UserDTO userDTO = objectMapper.readValue(request.getInputStream(), UserDTO.class);
@@ -147,6 +146,7 @@ public class UserServlet extends HttpServlet {
      * @param response объект {@link HttpServletResponse} для формирования ответа
      * @throws IOException если происходит ошибка ввода-вывода при обработке запроса или при попытке получить входные данные
      */
+    @Loggable("Логирование метода UserService.doPut")
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");

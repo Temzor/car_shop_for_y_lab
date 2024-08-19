@@ -1,7 +1,6 @@
 package ru.yaone.servlets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,13 +24,13 @@ import java.util.Set;
  * Сервлет для управления автомобилями.
  * <p>Этот сервлет обрабатывает HTTP-запросы для получения и добавления информации об автомобилях.</p>
  */
-@Loggable
+@Loggable("Логирование класса CarServlet")
+@Setter
 @WebServlet(name = "CarServlet", urlPatterns = "/api/cars/*")
 public class CarServlet extends HttpServlet {
 
-    @Setter
     private CarService carService = new CarServiceImpl();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Обработка HTTP GET запросов.
@@ -40,11 +39,11 @@ public class CarServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest}, представляющий HTTP-запрос
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
-     * @throws ServletException если происходит ошибка при обработке запроса
-     * @throws IOException      если происходит ошибка ввода/вывода
+     * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода CarServlet.doGet")
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
         String pathInfo = request.getPathInfo();
 
@@ -84,11 +83,11 @@ public class CarServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest}, представляющий HTTP-запрос
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
-     * @throws ServletException если происходит ошибка при обработке запроса
-     * @throws IOException      если происходит ошибка ввода/вывода
+     * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода CarServlet.doPost")
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
 
@@ -125,6 +124,7 @@ public class CarServlet extends HttpServlet {
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
      * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода CarServlet.doDelete")
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json; charset=UTF-8");

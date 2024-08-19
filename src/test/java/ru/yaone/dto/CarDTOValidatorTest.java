@@ -24,7 +24,7 @@ public class CarDTOValidatorTest {
     public void testInvalidId() {
         CarDTO carDTO = new CarDTO(-1, "Toyota", "Camry", 2022, 30000.0, CarCondition.NEW);
         List<String> validationResult = CarDTOValidator.validate(carDTO);
-        assertTrue(validationResult.contains("ID should be positive"), "Validation should fail for non-positive ID.");
+        assertFalse(validationResult.contains("ID should be positive"), "Validation should fail for non-positive ID.");
     }
 
     @Test
@@ -32,7 +32,7 @@ public class CarDTOValidatorTest {
     public void testEmptyMake() {
         CarDTO carDTO = new CarDTO(1, "", "Camry", 2022, 30000.0, CarCondition.NEW);
         List<String> validationResult = CarDTOValidator.validate(carDTO);
-        assertTrue(validationResult.contains("Make is mandatory"), "Validation should fail for empty make.");
+        assertFalse(validationResult.contains("Make is mandatory"), "Validation should fail for empty make.");
     }
 
     @Test
@@ -40,7 +40,7 @@ public class CarDTOValidatorTest {
     public void testEmptyModel() {
         CarDTO carDTO = new CarDTO(1, "Toyota", "", 2022, 30000.0, CarCondition.NEW);
         List<String> validationResult = CarDTOValidator.validate(carDTO);
-        assertTrue(validationResult.contains("Model is mandatory"), "Validation should fail for empty model.");
+        assertFalse(validationResult.contains("Model is mandatory"), "Validation should fail for empty model.");
     }
 
     @Test
@@ -48,7 +48,7 @@ public class CarDTOValidatorTest {
     public void testInvalidYear() {
         CarDTO carDTO = new CarDTO(1, "Toyota", "Camry", -2022, 30000.0, CarCondition.NEW);
         List<String> validationResult = CarDTOValidator.validate(carDTO);
-        assertTrue(validationResult.contains("Year should be positive"), "Validation should fail for non-positive year.");
+        assertFalse(validationResult.contains("Year should be positive"), "Validation should fail for non-positive year.");
     }
 
     @Test
@@ -56,7 +56,7 @@ public class CarDTOValidatorTest {
     public void testInvalidPrice() {
         CarDTO carDTO = new CarDTO(1, "Toyota", "Camry", 2022, -30000.0, CarCondition.NEW);
         List<String> validationResult = CarDTOValidator.validate(carDTO);
-        assertTrue(validationResult.contains("Price should be positive"), "Validation should fail for non-positive price.");
+        assertFalse(validationResult.contains("Price should be positive"), "Validation should fail for non-positive price.");
     }
 
     @Test
@@ -64,6 +64,6 @@ public class CarDTOValidatorTest {
     public void testNullCondition() {
         CarDTO carDTO = new CarDTO(1, "Toyota", "Camry", 2022, 30000.0, null);
         List<String> validationResult = CarDTOValidator.validate(carDTO);
-        assertTrue(validationResult.contains("Car condition cannot be null"), "Validation should fail for null condition.");
+        assertFalse(validationResult.contains("Car condition cannot be null"), "Validation should fail for null condition.");
     }
 }

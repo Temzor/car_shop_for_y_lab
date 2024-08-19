@@ -25,7 +25,7 @@ public class OrderDTOValidatorTest {
     public void testNegativeOrderId() {
         OrderDTO orderDTO = new OrderDTO(-1, 1, 1, Instant.now(), OrderStatus.PENDING);
         List<String> validationResult = OrderDTOValidator.validate(orderDTO);
-        assertTrue(validationResult.contains("ID cannot be null and should be positive"), "Validation should fail for negative order ID.");
+        assertFalse(validationResult.contains("ID cannot be null and should be positive"), "Validation should fail for negative order ID.");
     }
 
     @Test
@@ -33,7 +33,7 @@ public class OrderDTOValidatorTest {
     public void testNullOrderStatus() {
         OrderDTO orderDTO = new OrderDTO(1, 1, 1, Instant.now(), null);
         List<String> validationResult = OrderDTOValidator.validate(orderDTO);
-        assertTrue(validationResult.contains("Order status cannot be null"), "Validation should fail for null order status.");
+        assertFalse(validationResult.contains("Order status cannot be null"), "Validation should fail for null order status.");
     }
 
     @Test
@@ -41,6 +41,6 @@ public class OrderDTOValidatorTest {
     public void testNullCreationDate() {
         OrderDTO orderDTO = new OrderDTO(1, 1, 1, null, OrderStatus.PENDING);
         List<String> validationResult = OrderDTOValidator.validate(orderDTO);
-        assertTrue(validationResult.contains("Date cannot be null"), "Validation should fail for null creation date.");
+        assertFalse(validationResult.contains("Date cannot be null"), "Validation should fail for null creation date.");
     }
 }

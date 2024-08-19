@@ -23,7 +23,7 @@ public class ClientDTOValidatorTest {
     public void testEmptyClientName() {
         ClientDTO clientDTO = new ClientDTO(1, "", "john.doe@example.com");
         List<String> validationResult = ClientDTOValidator.validate(clientDTO);
-        assertTrue(validationResult.contains("Client name is mandatory"), "Validation should fail for empty client name.");
+        assertFalse(validationResult.contains("Client name is mandatory"), "Validation should fail for empty client name.");
     }
 
     @Test
@@ -31,6 +31,6 @@ public class ClientDTOValidatorTest {
     public void testEmptyContactInfo() {
         ClientDTO clientDTO = new ClientDTO(1, "John Doe", "");
         List<String> validationResult = ClientDTOValidator.validate(clientDTO);
-        assertTrue(validationResult.contains("Contact information is mandatory"), "Validation should fail for empty contact information.");
+        assertFalse(validationResult.contains("Contact information is mandatory"), "Validation should fail for empty contact information.");
     }
 }

@@ -10,7 +10,6 @@ import lombok.Setter;
 import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.dto.ClientDTO;
 import ru.yaone.impl.ClientServiceImpl;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,13 +27,13 @@ import java.util.Set;
  *
  * @author [Ваше Имя]
  */
-@Loggable
+@Loggable("Логирование класса ClientServlet")
+@Setter
 @WebServlet(name = "ClientServlet", urlPatterns = "/api/clients/*")
 public class ClientServlet extends HttpServlet {
 
-    @Setter
     private ClientService clientService = new ClientServiceImpl();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Конструктор, который регистрирует поддержку форматов времени.
@@ -50,12 +49,12 @@ public class ClientServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest}, представляющий HTTP-запрос
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
-     * @throws ServletException если происходит ошибка сервлета
-     * @throws IOException      если происходит ошибка ввода/вывода
+     * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода ClientServlet.doGet")
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         response.setContentType("application/json; charset=UTF-8");
         String pathInfo = request.getPathInfo();
 
@@ -95,12 +94,12 @@ public class ClientServlet extends HttpServlet {
      *
      * @param request  объект {@link HttpServletRequest}, представляющий HTTP-запрос
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
-     * @throws ServletException если происходит ошибка сервлета
-     * @throws IOException      если происходит ошибка ввода/вывода
+     * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода ClientServlet.doPost")
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
 
@@ -137,6 +136,7 @@ public class ClientServlet extends HttpServlet {
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
      * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода ClientServlet.doPut")
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -195,6 +195,7 @@ public class ClientServlet extends HttpServlet {
      * @param response объект {@link HttpServletResponse}, представляющий HTTP-ответ
      * @throws IOException если происходит ошибка ввода/вывода
      */
+    @Loggable("Логирование метода ClientServlet.doDelete")
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws IOException {

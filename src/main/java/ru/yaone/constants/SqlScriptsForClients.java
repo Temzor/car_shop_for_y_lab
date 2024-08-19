@@ -1,4 +1,4 @@
-package ru.yaone.constans;
+package ru.yaone.constants;
 
 import lombok.Getter;
 

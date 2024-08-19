@@ -1,4 +1,4 @@
-package ru.yaone.constans;
+package ru.yaone.constants;
 
 /**
  * Класс {@code SqlScriptsForCar} содержит SQL-скрипты, используемые для управления
