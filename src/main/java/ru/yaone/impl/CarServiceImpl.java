@@ -1,9 +1,11 @@
 package ru.yaone.impl;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.constants.SqlScriptsForCar;
-import ru.yaone.dto.CarDTO;
 import ru.yaone.manager.DatabaseConnectionManager;
+import ru.yaone.model.Car;
 import ru.yaone.model.enumeration.CarCondition;
 import ru.yaone.services.CarService;
 
@@ -20,8 +22,12 @@ import java.util.List;
  *
  * @see CarService
  */
+@Service
 @Loggable("Логирование класса CarServiceImpl")
+@RequiredArgsConstructor
 public class CarServiceImpl implements CarService {
+
+    private final DatabaseConnectionManager databaseConnectionManager;
 
     /**
      * Добавляет новый автомобиль в базу данных.
@@ -30,27 +36,27 @@ public class CarServiceImpl implements CarService {
      * в таблицу <code>cars</code> базы данных, включая марку, модель,
      * год выпуска, цену и состояние автомобиля.</p>
      *
-     * @param carDTO объект автомобиля, который нужно добавить
+     * @param car объект автомобиля, который нужно добавить
      * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
      */
     @Loggable("Логирование метода CarServiceImpl.addCar")
     @Override
-    public void addCar(CarDTO carDTO) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public void addCar(Car car) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForCar.ADD_CAR)) {
-            preparedStatement.setString(1, carDTO.getMake());
-            preparedStatement.setString(2, carDTO.getModel());
-            preparedStatement.setInt(3, carDTO.getYear());
-            preparedStatement.setDouble(4, carDTO.getPrice());
-            preparedStatement.setString(5, carDTO.getCondition().toString());
+            preparedStatement.setString(1, car.make());
+            preparedStatement.setString(2, car.model());
+            preparedStatement.setInt(3, car.year());
+            preparedStatement.setDouble(4, car.price());
+            preparedStatement.setString(5, car.condition().toString());
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    new CarDTO(rs.getInt(1),
-                            carDTO.getMake(),
-                            carDTO.getModel(),
-                            carDTO.getYear(),
-                            carDTO.getPrice(),
-                            carDTO.getCondition());
+                    new Car(rs.getInt(1),
+                            car.make(),
+                            car.model(),
+                            car.year(),
+                            car.price(),
+                            car.condition());
                 }
             }
         } catch (SQLException e) {
@@ -70,13 +76,13 @@ public class CarServiceImpl implements CarService {
      */
     @Loggable("Логирование метода CarServiceImpl.getAllCars")
     @Override
-    public List<CarDTO> getAllCars() {
-        List<CarDTO> carsDTO = new ArrayList<>();
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public List<Car> getAllCars() {
+        List<Car> cars = new ArrayList<>();
+        try (Connection conn = databaseConnectionManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(SqlScriptsForCar.GET_ALL_CARS)) {
             while (rs.next()) {
-                CarDTO carDTO = new CarDTO(
+                Car car = new Car(
                         rs.getInt("id"),
                         rs.getString("make"),
                         rs.getString("model"),
@@ -84,13 +90,13 @@ public class CarServiceImpl implements CarService {
                         rs.getDouble("price"),
                         CarCondition.valueOf(rs.getString("condition"))
                 );
-                carsDTO.add(carDTO);
+                cars.add(car);
             }
         } catch (SQLException e) {
             System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении автомобилей", e);
         }
-        return carsDTO;
+        return cars;
     }
 
     /**
@@ -107,15 +113,16 @@ public class CarServiceImpl implements CarService {
      */
     @Loggable("Логирование метода CarServiceImpl.getCarById")
     @Override
-    public CarDTO getCarById(int id) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForCar.GET_CAR_BY_ID)) {
+    public Car getCarById(int id) {
+        try (Connection conn = databaseConnectionManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForCar.GET_CAR_BY_ID, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setInt(1, id);
-            CarDTO rs = getCarDTO(preparedStatement);
+            Car rs = getCar(preparedStatement);
             if (rs != null) {
                 return rs;
             }
         } catch (SQLException e) {
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении автомобиля по ID", e);
         }
         return null;
@@ -132,10 +139,10 @@ public class CarServiceImpl implements CarService {
      * @throws SQLException если произошла ошибка при выполнении SQL-запроса
      */
     @Loggable("Логирование метода CarServiceImpl.getCarDTO")
-    private static CarDTO getCarDTO(PreparedStatement preparedStatement) throws SQLException {
+    private static Car getCar(PreparedStatement preparedStatement) throws SQLException {
         try (ResultSet rs = preparedStatement.executeQuery()) {
             if (rs.next()) {
-                return new CarDTO(
+                return new Car(
                         rs.getInt("id"),
                         rs.getString("make"),
                         rs.getString("model"),
@@ -155,20 +162,20 @@ public class CarServiceImpl implements CarService {
      * Он выполняет SQL-запрос для обновления записи соответствующего автомобиля
      * в таблице <code>cars</code>.</p>
      *
-     * @param id            идентификатор автомобиля, который необходимо обновить
-     * @param updatedCarDTO объект Car с новыми значениями для обновления
+     * @param id         идентификатор автомобиля, который необходимо обновить
+     * @param updatedCar объект Car с новыми значениями для обновления
      * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
      */
     @Loggable("Логирование метода CarServiceImpl.updateCar")
     @Override
-    public void updateCar(int id, CarDTO updatedCarDTO) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public void updateCar(int id, Car updatedCar) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForCar.UPDATE_CAR)) {
-            preparedStatement.setString(1, updatedCarDTO.getMake());
-            preparedStatement.setString(2, updatedCarDTO.getModel());
-            preparedStatement.setInt(3, updatedCarDTO.getYear());
-            preparedStatement.setDouble(4, updatedCarDTO.getPrice());
-            preparedStatement.setString(5, updatedCarDTO.getCondition().toString());
+            preparedStatement.setString(1, updatedCar.make());
+            preparedStatement.setString(2, updatedCar.model());
+            preparedStatement.setInt(3, updatedCar.year());
+            preparedStatement.setDouble(4, updatedCar.price());
+            preparedStatement.setString(5, updatedCar.condition().toString());
             preparedStatement.setInt(6, id);
         } catch (SQLException e) {
             System.err.println("Ошибка SQL: " + e.getMessage());
@@ -188,7 +195,7 @@ public class CarServiceImpl implements CarService {
     @Loggable("Логирование метода CarServiceImpl.deleteCarById")
     @Override
     public boolean deleteCarById(int id) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForCar.DELETE_CAR)) {
             preparedStatement.setInt(1, id);
             int affectedRows = preparedStatement.executeUpdate();
@@ -200,6 +207,7 @@ public class CarServiceImpl implements CarService {
                 return false;
             }
         } catch (SQLException e) {
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при удалении автомобиля", e);
         }
     }
@@ -221,9 +229,9 @@ public class CarServiceImpl implements CarService {
      */
     @Loggable("Логирование метода CarServiceImpl.searchCars")
     @Override
-    public List<CarDTO> searchCars(String make, String model, int year, double price, CarCondition condition) {
-        List<CarDTO> carDTOs = new ArrayList<>();
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public List<Car> searchCars(String make, String model, int year, double price, CarCondition condition) {
+        List<Car> cars = new ArrayList<>();
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForCar.SEARCH_CARS)) {
             preparedStatement.setString(1, "%" + make + "%");
             preparedStatement.setString(2, "%" + model + "%");
@@ -232,7 +240,7 @@ public class CarServiceImpl implements CarService {
             preparedStatement.setString(5, condition.toString());
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
-                    CarDTO carDTO = new CarDTO(
+                    Car car = new Car(
                             rs.getInt("id"),
                             rs.getString("make"),
                             rs.getString("model"),
@@ -240,14 +248,13 @@ public class CarServiceImpl implements CarService {
                             rs.getDouble("price"),
                             CarCondition.valueOf(rs.getString("condition"))
                     );
-                    carDTOs.add(carDTO);
+                    cars.add(car);
                 }
             }
         } catch (SQLException e) {
             System.err.println("Ошибка SQL: " + e.getMessage());
-
             throw new RuntimeException("Ошибка при поиске автомобилей", e);
         }
-        return carDTOs;
+        return cars;
     }
 }

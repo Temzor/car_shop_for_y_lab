@@ -1,95 +1,119 @@
 package ru.yaone.impl;
 
-import org.junit.jupiter.api.*;
-import org.testcontainers.containers.PostgreSQLContainer;
-import ru.yaone.dto.CarDTO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import ru.yaone.manager.DatabaseConnectionManager;
+import ru.yaone.model.Car;
 import ru.yaone.model.enumeration.CarCondition;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
+class CarServiceImplTest {
 
-@DisplayName("Тестирование сервиса автомобилей")
-public class CarServiceImplTest {
+    @Mock
+    private DatabaseConnectionManager databaseConnectionManager;
 
-    private static PostgreSQLContainer<?> postgresContainer;
-    private CarServiceImpl carService;
+    @Mock
+    private Connection mockConnection;
 
-    @BeforeAll
-    public static void setupContainer() {
-        postgresContainer = new PostgreSQLContainer<>("postgres:14.13")
-                .withDatabaseName("car_shop")
-                .withUsername("test")
-                .withPassword("test");
-        postgresContainer.start();
-    }
+    @Mock
+    private PreparedStatement mockPreparedStatement;
+
+    @Mock
+    private Statement mockStatement;
+
+    @Mock
+    private ResultSet mockResultSet;
+
+    private CarServiceImpl carServiceImpl;
 
     @BeforeEach
-    public void setup() {
-        carService = new CarServiceImpl();
-        initDatabase();
-    }
-
-    private void initDatabase() {
-        String createSchemaSQL = "CREATE SCHEMA IF NOT EXISTS car_shop;";
-        String createTableSQL = """
-                CREATE TABLE IF NOT EXISTS car_shop.cars (
-                id SERIAL PRIMARY KEY,
-                make VARCHAR(255),
-                model VARCHAR(255),
-                year INT,
-                price DOUBLE PRECISION,
-                condition VARCHAR(255)
-                );
-                """;
-        try (Connection conn = DriverManager.getConnection(
-                postgresContainer.getJdbcUrl(),
-                postgresContainer.getUsername(),
-                postgresContainer.getPassword());
-             Statement stmt = conn.createStatement()) {
-            stmt.execute(createSchemaSQL);
-            stmt.execute(createTableSQL);
-        } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при инициализации базы данных", e);
-        }
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        postgresContainer.stop();
+    void setUp() throws Exception {
+        MockitoAnnotations.openMocks(this);
+        when(databaseConnectionManager.getConnection()).thenReturn(mockConnection);
+        carServiceImpl = new CarServiceImpl(databaseConnectionManager);
     }
 
     @Test
-    @DisplayName("Добавление нового автомобиля")
-    public void testAddCar() {
-        CarDTO newCar = new CarDTO(0, "Toyota", "Corolla", 2022, 20000, CarCondition.NEW);
-        carService.addCar(newCar);
-        List<CarDTO> cars = carService.getAllCars();
-        assertThat(cars).isNotEmpty();
+    @DisplayName("Тест метода добавления автомобиля")
+    void testAddCar() throws Exception {
+        Car car = new Car(0, "Toyota", "Corolla", 2022, 20000.0, CarCondition.NEW);
+
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true);
+        when(mockResultSet.getInt(1)).thenReturn(1);
+
+        carServiceImpl.addCar(car);
+
+        verify(mockPreparedStatement, times(1)).setString(1, car.make());
+        verify(mockPreparedStatement, times(1)).setString(2, car.model());
+        verify(mockPreparedStatement, times(1)).setInt(3, car.year());
+        verify(mockPreparedStatement, times(1)).setDouble(4, car.price());
+        verify(mockPreparedStatement, times(1)).setString(5, car.condition().toString());
     }
 
     @Test
-    @DisplayName("Получение списка всех автомобилей")
-    public void testGetAllCars() {
-        carService.addCar(new CarDTO(0, "Toyota", "Corolla", 2022, 20000, CarCondition.NEW));
-        carService.addCar(new CarDTO(0, "Honda", "Civic", 2023, 22000, CarCondition.NEW));
-        List<CarDTO> cars = carService.getAllCars();
-        assertThat(cars).isNotNull().isNotEmpty();
+    @DisplayName("Тест метода получения всех автомобилей")
+    void testGetAllCars() throws Exception {
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, false);  // Simulate one result
+        when(mockResultSet.getInt("id")).thenReturn(1);
+        when(mockResultSet.getString("make")).thenReturn("Toyota");
+        when(mockResultSet.getString("model")).thenReturn("Corolla");
+        when(mockResultSet.getInt("year")).thenReturn(2022);
+        when(mockResultSet.getDouble("price")).thenReturn(20000.0);
+        when(mockResultSet.getString("condition")).thenReturn("NEW");
+
+        List<Car> cars = carServiceImpl.getAllCars();
+
+        assertThat(cars).isNotNull().hasSize(1);
+        assertThat(cars.get(0).make()).isEqualTo("Toyota");
     }
 
     @Test
-    @DisplayName("Получение автомобиля по ID")
-    public void testGetCarById() {
-        carService.addCar(new CarDTO(0, "Toyota", "Corolla", 2022, 20000, CarCondition.NEW));
-        List<CarDTO> cars = carService.getAllCars();
-        int carId = cars.get(0).getId();
-        CarDTO retrievedCar = carService.getCarById(carId);
-        Assertions.assertNotNull(retrievedCar);
-        Assertions.assertEquals("Toyota", retrievedCar.getMake());
+    @DisplayName("Тест метода получения автомобиля по ID")
+    void testGetCarById() throws Exception {
+        int carId = 1;
+
+        when(mockConnection.prepareStatement(anyString(), anyInt())).thenReturn(mockPreparedStatement);
+        when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true);
+        when(mockResultSet.getInt("id")).thenReturn(carId);
+        when(mockResultSet.getString("make")).thenReturn("Toyota");
+        when(mockResultSet.getString("model")).thenReturn("Corolla");
+        when(mockResultSet.getInt("year")).thenReturn(2022);
+        when(mockResultSet.getDouble("price")).thenReturn(20000.0);
+        when(mockResultSet.getString("condition")).thenReturn("NEW");
+
+        Car car = carServiceImpl.getCarById(carId);
+
+        assertThat(car).isNotNull();
+        assertThat(car.make()).isEqualTo("Toyota");
+    }
+
+    @Test
+    @DisplayName("Тест метода получения автомобиля по ID если автомобиль не найден")
+    void testGetCarById_NotFound() throws Exception {
+        int carId = 1;
+
+        when(mockConnection.prepareStatement(anyString(), anyInt())).thenReturn(mockPreparedStatement);
+        when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false); // Simulate no result
+
+        Car car = carServiceImpl.getCarById(carId);
+
+        assertThat(car).isNull();
     }
 }

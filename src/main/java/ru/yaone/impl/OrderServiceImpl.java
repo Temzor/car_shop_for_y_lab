@@ -1,11 +1,13 @@
 package ru.yaone.impl;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.constants.SqlScriptsForOrder;
-import ru.yaone.dto.OrderDTO;
 import ru.yaone.manager.DatabaseConnectionManager;
 import ru.yaone.model.Car;
 import ru.yaone.model.Client;
+import ru.yaone.model.Order;
 import ru.yaone.model.enumeration.CarCondition;
 import ru.yaone.model.enumeration.OrderStatus;
 import ru.yaone.services.OrderService;
@@ -18,19 +20,24 @@ import java.util.List;
 /**
  * Реализация интерфейса OrderService, предоставляющая методы для работы с заказами в системе.
  */
+@Service
 @Loggable("Логирование класса OrderServiceImpl")
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+    private final DatabaseConnectionManager databaseConnectionManager;
+
+
     @Override
-    public void addOrder(OrderDTO orderDTO) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForOrder.ADD_ORDER)) {
-            preparedStatement.setString(1, String.valueOf(orderDTO.getClientId()));
-            preparedStatement.setInt(2, orderDTO.getCarId());
+    public void addOrder(Order order) {
+        try (Connection conn = databaseConnectionManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForOrder.ADD_ORDER, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setInt(1, order.clientId());
+            preparedStatement.setInt(2, order.carId());
             preparedStatement.setDate(3, Date.valueOf(LocalDate.now()));
-            preparedStatement.setString(4, orderDTO.getStatus().toString());
+            preparedStatement.setString(4, order.status().name());
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    new OrderDTO(rs.getInt(1), orderDTO.getClientId(), orderDTO.getCarId(), orderDTO.getCreationDate(), orderDTO.getStatus());
+                    new Order(rs.getInt(1), order.clientId(), order.carId(), order.creationDate(), order.status());
                 }
             }
         } catch (SQLException e) {
@@ -50,9 +57,9 @@ public class OrderServiceImpl implements OrderService {
      */
     @Loggable("Логирование метода OrderServiceImpl.getAllOrders")
     @Override
-    public List<OrderDTO> getAllOrders() {
-        List<OrderDTO> ordersDTO = new ArrayList<>();
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public List<Order> getAllOrders() {
+        List<Order> orders = new ArrayList<>();
+        try (Connection conn = databaseConnectionManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(SqlScriptsForOrder.GET_ALL_ORDERS)) {
             while (rs.next()) {
@@ -62,7 +69,6 @@ public class OrderServiceImpl implements OrderService {
                         rs.getString("contact_info")
                 );
                 Car car = new Car(
-
                         rs.getInt("car_id"),
                         rs.getString("make"),
                         rs.getString("model"),
@@ -70,20 +76,20 @@ public class OrderServiceImpl implements OrderService {
                         rs.getDouble("price"),
                         CarCondition.valueOf(rs.getString("condition"))
                 );
-                OrderDTO orderDTO = new OrderDTO(
+                Order order = new Order(
                         rs.getInt("id"),
                         client.id(),
                         car.id(),
                         rs.getTimestamp("creation_date").toInstant(),
                         OrderStatus.valueOf(rs.getString("status"))
                 );
-                ordersDTO.add(orderDTO);
+                orders.add(order);
             }
         } catch (SQLException e) {
             System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении заказов", e);
         }
-        return ordersDTO;
+        return orders;
     }
 
     /**
@@ -98,8 +104,8 @@ public class OrderServiceImpl implements OrderService {
      */
     @Loggable("Логирование метода OrderServiceImpl.getOrderById")
     @Override
-    public OrderDTO getOrderById(int id) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public Order getOrderById(int id) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForOrder.GET_ORDER_BY_ID)) {
             preparedStatement.setInt(1, id);
             try (ResultSet rs = preparedStatement.executeQuery()) {
@@ -117,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
                             rs.getDouble("price"),
                             CarCondition.valueOf(rs.getString("condition"))
                     );
-                    return new OrderDTO(
+                    return new Order(
                             rs.getInt("id"),
                             client.id(),
                             car.id(),
@@ -144,13 +150,13 @@ public class OrderServiceImpl implements OrderService {
      */
     @Loggable("Логирование метода OrderServiceImpl.updateOrder")
     @Override
-    public void updateOrder(int id, OrderDTO updatedOrder) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public void updateOrder(int id, Order updatedOrder) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForOrder.UPDATE_ORDER)) {
-            preparedStatement.setInt(1, updatedOrder.getClientId());
-            preparedStatement.setInt(2, updatedOrder.getCarId());
+            preparedStatement.setInt(1, updatedOrder.clientId());
+            preparedStatement.setInt(2, updatedOrder.carId());
             preparedStatement.setDate(3, Date.valueOf(LocalDate.now()));
-            preparedStatement.setString(4, updatedOrder.getStatus().toString());
+            preparedStatement.setString(4, updatedOrder.status().toString());
             preparedStatement.setInt(5, id);
             int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows > 0) {
@@ -175,8 +181,8 @@ public class OrderServiceImpl implements OrderService {
      */
     @Loggable("Логирование метода OrderServiceImpl.deleteOrderById")
     @Override
-    public boolean deleteOrderById(int id) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public boolean deleteOrder(int id) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForOrder.DELETE_ORDER)) {
             preparedStatement.setInt(1, id);
             int affectedRows = preparedStatement.executeUpdate();

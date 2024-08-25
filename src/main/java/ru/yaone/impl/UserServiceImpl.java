@@ -1,8 +1,9 @@
 package ru.yaone.impl;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.constants.SqlScriptsForUsers;
-import ru.yaone.dto.UserDTO;
 import ru.yaone.model.User;
 import ru.yaone.model.enumeration.UserRole;
 import ru.yaone.services.UserService;
@@ -15,31 +16,36 @@ import java.util.List;
 /**
  * Реализация сервиса пользователей для управления операциями с пользователями.
  */
+@Service
 @Loggable("Логирование класса UserServiceImpl")
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
+    private final DatabaseConnectionManager databaseConnectionManager;
+
     /**
      * Добавляет нового пользователя в базу данных.
      *
      * <p>Перед добавлением проверяет, не занято ли имя пользователя. Если имя занято,
      * выбрасывается RuntimeException. Если имя свободно, пользователь добавляется в базу данных.</p>
      *
-     * @param userDTO объект пользователя, который необходимо добавить в систему
+     * @param user объект пользователя, который необходимо добавить в систему
      * @throws RuntimeException если имя пользователя уже занято или произошла ошибка во время SQL-запроса
      */
     @Loggable("Логирование метода UserServiceImpl.addUser")
     @Override
-    public void addUser(UserDTO userDTO) {
-        if (isUsernameTaken(userDTO.getUsername())) {
-            throw new RuntimeException("Пользователь с именем " + userDTO.getUsername() + " уже существует.");
+    public void addUser(User user) {
+        if (isUsernameTaken(user.username())) {
+            throw new RuntimeException("Пользователь с именем " + user.username() + " уже существует.");
         }
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.ADD_USER)) {
-            preparedStatement.setString(1, userDTO.getUsername());
-            preparedStatement.setString(2, userDTO.getPassword());
-            preparedStatement.setString(3, userDTO.getRole().toString());
+        try (Connection conn = databaseConnectionManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.ADD_USER, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, user.username());
+            preparedStatement.setString(2, user.password());
+            preparedStatement.setString(3, user.role().toString());
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    new User(rs.getInt(1), userDTO.getUsername(), userDTO.getPassword(), userDTO.getRole());
+                    new User(rs.getInt(1), user.username(), user.password(), user.role());
                     System.out.println("Пользователь успешно зарегистрирован.");
                 }
             }
@@ -58,7 +64,7 @@ public class UserServiceImpl implements UserService {
      */
     @Loggable("Логирование метода UserServiceImpl.isUsernameTaken")
     private boolean isUsernameTaken(String username) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.GET_USER)) {
             preparedStatement.setString(1, username);
             try (ResultSet rs = preparedStatement.executeQuery()) {
@@ -81,25 +87,25 @@ public class UserServiceImpl implements UserService {
      */
     @Loggable("Логирование метода UserServiceImpl.getAllUsers")
     @Override
-    public List<UserDTO> getAllUsers() {
-        List<UserDTO> usersDTO = new ArrayList<>();
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        try (Connection conn = databaseConnectionManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(SqlScriptsForUsers.GET_ALL_USERS)) {
             while (rs.next()) {
-                UserDTO userDTO = new UserDTO(
+                User user = new User(
                         rs.getInt("id"),
                         rs.getString("username"),
                         rs.getString("password"),
                         UserRole.valueOf(rs.getString("role"))
                 );
-                usersDTO.add(userDTO);
+                users.add(user);
             }
         } catch (SQLException e) {
             System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении пользователей", e);
         }
-        return usersDTO;
+        return users;
     }
 
     /**
@@ -114,13 +120,13 @@ public class UserServiceImpl implements UserService {
      */
     @Loggable("Логирование метода UserServiceImpl.getUserById")
     @Override
-    public UserDTO getUserById(int id) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public User getUserById(int id) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.GET_USER_BY_ID)) {
             preparedStatement.setInt(1, id);
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    return new UserDTO(
+                    return new User(
                             rs.getInt("id"),
                             rs.getString("username"),
                             rs.getString("password"),
@@ -140,18 +146,18 @@ public class UserServiceImpl implements UserService {
      *
      * <p>Метод обновляет имя, пароль и роль пользователя с указанным идентификатором.</p>
      *
-     * @param id             уникальный идентификатор пользователя, которого нужно обновить
-     * @param updatedUserDTO объект {@link User} с новыми данными
+     * @param id          уникальный идентификатор пользователя, которого нужно обновить
+     * @param updatedUser объект {@link User} с новыми данными
      * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
      */
     @Loggable("Логирование метода UserServiceImpl.updateUser")
     @Override
-    public void updateUser(int id, UserDTO updatedUserDTO) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public void updateUser(int id, User updatedUser) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.UPDATE_USER)) {
-            preparedStatement.setString(1, updatedUserDTO.getUsername());
-            preparedStatement.setString(2, updatedUserDTO.getPassword());
-            preparedStatement.setString(3, updatedUserDTO.getRole().toString());
+            preparedStatement.setString(1, updatedUser.username());
+            preparedStatement.setString(2, updatedUser.password());
+            preparedStatement.setString(3, updatedUser.role().toString());
             preparedStatement.setInt(4, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

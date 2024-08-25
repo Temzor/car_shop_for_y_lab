@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Swagger UI</title>
+    <link rel="stylesheet" type="text/css" href="swagger-ui.css">
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="swagger-ui.js"></script>
+<script>
+    window.swaggerUi = new SwaggerUi({
+        url: "api-docs",
+        dom_id: "swagger-ui"
+    });
+    window.swaggerUi.load();
+</script>
+</body>
+</html>

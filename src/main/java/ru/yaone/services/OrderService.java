@@ -1,6 +1,6 @@
 package ru.yaone.services;
 
-import ru.yaone.dto.OrderDTO;
+import ru.yaone.model.Order;
 
 import java.util.List;
 
@@ -17,16 +17,16 @@ public interface OrderService {
     /**
      * Добавляет новый заказ в систему.
      *
-     * @param orderDTO объект заказа, который необходимо добавить
+     * @param order объект заказа, который необходимо добавить
      */
-    void addOrder(OrderDTO orderDTO);
+    void addOrder(Order order);
 
     /**
      * Получает список всех заказов в системе.
      *
      * @return список всех заказов
      */
-    List<OrderDTO> getAllOrders();
+    List<Order> getAllOrders();
 
     /**
      * Получает заказ по его идентификатору.
@@ -35,20 +35,20 @@ public interface OrderService {
      * @return объект заказа с указанным идентификатором или null,
      * если заказ не найден
      */
-    OrderDTO getOrderById(int id);
+    Order getOrderById(int id);
 
     /**
      * Обновляет информацию о заказе.
      *
      * @param id              идентификатор заказа, который необходимо обновить
-     * @param updatedOrderDTO объект заказа с обновлённой информацией
+     * @param updatedOrder объект заказа с обновлённой информацией
      */
-    void updateOrder(int id, OrderDTO updatedOrderDTO);
+    void updateOrder(int id, Order updatedOrder);
 
     /**
      * Удаляет заказ из системы по его идентификатору.
      *
      * @param id идентификатор заказа, который необходимо удалить
      */
-    boolean deleteOrderById(int id);
+    boolean deleteOrder(int id);
 }

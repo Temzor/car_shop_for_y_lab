@@ -1,7 +1,5 @@
 package ru.yaone.constants;
 
-import lombok.Getter;
-
 /**
  * Класс {@code SqlScriptsForClients} содержит SQL-скрипты, используемые для управления
  * клиентами в магазине автомобилей.
@@ -10,11 +8,7 @@ import lombok.Getter;
  *
  * <p>Запросы позволяют добавлять, извлекать, обновлять и удалять записи о клиентах
  * из таблицы {@code clients} в базе данных.</p>
- *
- * @version 1.0
- * @autor Ваше имя
  */
-@Getter
 public class SqlScriptsForClients {
 
     /**

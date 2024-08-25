@@ -1,8 +1,9 @@
 package ru.yaone.impl;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.constants.SqlScriptsForClients;
-import ru.yaone.dto.ClientDTO;
 import ru.yaone.manager.DatabaseConnectionManager;
 import ru.yaone.model.Client;
 import ru.yaone.services.ClientService;
@@ -15,28 +16,32 @@ import java.util.List;
  * Реализация сервиса для управления клиентами.
  * <p>Данный класс предоставляет методы для добавления клиентов и получения списка всех клиентов.</p>
  */
+@Service
 @Loggable("Логирование класса ClientServiceImpl")
+@RequiredArgsConstructor
 public class ClientServiceImpl implements ClientService {
+
+    private final DatabaseConnectionManager databaseConnectionManager;
 
     /**
      * Добавляет нового клиента в базу данных.
-     * <p>Метод принимает объект {@code ClientDTO}, извлекает информацию о клиенте
+     * <p>Метод принимает объект {@code Client}, извлекает информацию о клиенте
      * и выполняет SQL-запрос для его добавления в базу данных. Если операция проходит
      * успешно, клиент сохраняется в базе данных, иначе выбрасывается исключение.</p>
      *
-     * @param clientDTO объект, содержащий информацию о клиенте, который необходимо добавить
+     * @param client объект, содержащий информацию о клиенте, который необходимо добавить
      * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
      */
     @Loggable("Логирование метода ClientServiceImpl.addClient")
     @Override
-    public void addClient(ClientDTO clientDTO) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.ADD_CLIENT)) {
-            preparedStatement.setString(1, clientDTO.getClientName());
-            preparedStatement.setString(2, clientDTO.getContactInfo());
+    public void addClient(Client client) {
+        try (Connection conn = databaseConnectionManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.ADD_CLIENT, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, client.clientName());
+            preparedStatement.setString(2, client.contactInfo());
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    new Client(rs.getInt(1), clientDTO.getClientName(), clientDTO.getContactInfo());
+                    new Client(rs.getInt(1), client.clientName(), client.contactInfo());
                 }
             }
         } catch (SQLException e) {
@@ -48,52 +53,52 @@ public class ClientServiceImpl implements ClientService {
     /**
      * Получает список всех клиентов из базы данных.
      * <p>Метод выполняет SQL-запрос для получения всех клиентов и возвращает
-     * список объектов {@code ClientDTO} с информацией о каждом клиенте.</p>
+     * список объектов {@code Client} с информацией о каждом клиенте.</p>
      *
-     * @return список {@code ClientDTO}, содержащий всех клиентов из базы данных
+     * @return список {@code Client}, содержащий всех клиентов из базы данных
      * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
      */
     @Loggable("Логирование метода ClientServiceImpl.getAllClients")
     @Override
-    public List<ClientDTO> getAllClients() {
-        List<ClientDTO> clientDTOS = new ArrayList<>();
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(SqlScriptsForClients.GET_ALL_CLIENTS)) {
+    public List<Client> getAllClients() {
+        List<Client> clients = new ArrayList<>();
+        try (Connection conn = databaseConnectionManager.getConnection();
+             Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery(SqlScriptsForClients.GET_ALL_CLIENTS)) {
             while (rs.next()) {
-                ClientDTO clientDTO = new ClientDTO(
+                Client client = new Client(
                         rs.getInt("id"),
                         rs.getString("client_name"),
                         rs.getString("contact_info")
                 );
-                clientDTOS.add(clientDTO);
+                clients.add(client);
             }
         } catch (SQLException e) {
             System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении клиентов", e);
         }
-        return clientDTOS;
+        return clients;
     }
 
 
     /**
      * Получает информацию о клиенте по его идентификатору.
      * <p>Метод выполняет SQL-запрос для получения клиента из базы данных на основе его идентификатора.
-     * Если клиент с данным ID найден, возвращается объект {@code ClientDTO}. В противном случае возвращается {@code null}.</p>
+     * Если клиент с данным ID найден, возвращается объект {@code Client}. В противном случае возвращается {@code null}.</p>
      *
      * @param id идентификатор клиента, информацию о котором необходимо получить
-     * @return объект {@code ClientDTO} с информацией о клиенте или {@code null}, если клиент не найден
+     * @return объект {@code Client} с информацией о клиенте или {@code null}, если клиент не найден
      * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
      */
     @Loggable("Логирование метода ClientServiceImpl.getClientById")
     @Override
-    public ClientDTO getClientById(int id) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.GET_CLIENTS_BY_ID)) {
+    public Client getClientById(int id) {
+        try (Connection conn = databaseConnectionManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.GET_CLIENTS_BY_ID, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setInt(1, id);
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    return new ClientDTO(
+                    return new Client(
                             rs.getInt("id"),
                             rs.getString("client_name"),
                             rs.getString("contact_info")
@@ -119,7 +124,7 @@ public class ClientServiceImpl implements ClientService {
     @Loggable("Логирование метода ClientServiceImpl.deleteClientById")
     @Override
     public boolean deleteClientById(int id) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.DELETED_CLIENTS_BY_ID)) {
             preparedStatement.setInt(1, id);
             int affectedRows = preparedStatement.executeUpdate();
@@ -141,17 +146,17 @@ public class ClientServiceImpl implements ClientService {
      * <p>Метод выполняет SQL-запрос для обновления информации о клиенте в базе данных на основе его идентификатора.
      * Если обновление прошло успешно, выводится сообщение об успешном обновлении, в противном случае — о том, что клиент не найден.</p>
      *
-     * @param id               идентификатор клиента, которого необходимо обновить
-     * @param updatedClientDTO объект {@code ClientDTO}, содержащий обновленную информацию о клиенте
+     * @param id            идентификатор клиента, которого необходимо обновить
+     * @param updatedClient объект {@code Client}, содержащий обновленную информацию о клиенте
      * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
      */
     @Loggable("Логирование метода ClientServiceImpl.updateClient")
     @Override
-    public void updateClient(int id, ClientDTO updatedClientDTO) {
-        try (Connection conn = DatabaseConnectionManager.getConnection();
+    public void updateClient(int id, Client updatedClient) {
+        try (Connection conn = databaseConnectionManager.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.UPDATE_CLIENT)) {
-            preparedStatement.setString(1, updatedClientDTO.getClientName());
-            preparedStatement.setString(2, updatedClientDTO.getContactInfo());
+            preparedStatement.setString(1, updatedClient.clientName());
+            preparedStatement.setString(2, updatedClient.contactInfo());
             preparedStatement.setInt(3, id);
             int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows > 0) {
