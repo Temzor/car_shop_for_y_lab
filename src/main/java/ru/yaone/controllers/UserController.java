@@ -1,10 +1,10 @@
 package ru.yaone.controllers;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,73 +15,102 @@ import ru.yaone.dto.UserDTO;
 import ru.yaone.mapper.UserMapper;
 import ru.yaone.model.User;
 import ru.yaone.services.UserService;
+import jakarta.validation.Valid;
 import java.util.List;
 
+/**
+ * Контроллер для работы с пользователями.
+ */
 @Loggable
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
-@Api(value = "User Controller", tags = "Операции с пользователями")
+@Tag(name = "User Controller", description = "Операции с пользователями")
 public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
 
+    /**
+     * Получить всех пользователей.
+     *
+     * @return Список пользователей в формате UserDTO.
+     */
     @GetMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Получить всех пользователей", response = UserDTO.class, responseContainer = "List")
+    @Operation(description = "Получить всех пользователей")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         List<UserDTO> usersDTO = userMapper.userToUserDTO(users);
         return ResponseEntity.ok(usersDTO);
     }
 
+    /**
+     * Получить пользователя по ID.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Пользователь в формате UserDTO, если найден, иначе 404.
+     */
     @GetMapping("/users/{id}")
-    @ApiOperation(value = "Получить пользователя по ID", response = UserDTO.class)
+    @Operation(description = "Получить пользователя по ID")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Успешно найден пользователь"),
-            @ApiResponse(code = 404, message = "Пользователь не найден")
+            @ApiResponse(responseCode = "200", description = "Успешно найден пользователь"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    public ResponseEntity<UserDTO> getUserById(@ApiParam(value = "ID пользователя", required = true) @PathVariable("id") int id) {
+    public ResponseEntity<UserDTO> getUserById(
+            @Parameter(description = "ID пользователя", required = true) @PathVariable("id") int id) {
+
         User user = userService.getUserById(id);
-        if (user != null) {
-            UserDTO userDTO = userMapper.userToUserDTO(user);
-            return ResponseEntity.ok(userDTO);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return user != null ? ResponseEntity.ok(userMapper.userToUserDTO(user))
+                : ResponseEntity.notFound().build();
     }
 
+    /**
+     * Добавить нового пользователя.
+     *
+     * @param userDTO Данные пользователя для добавления.
+     * @return Статус 201, если пользователь успешно добавлен.
+     */
     @PostMapping(value = "/users")
-    @ApiOperation(value = "Добавить нового пользователя")
+    @Operation(description = "Добавить нового пользователя")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Пользователь успешно добавлен"),
-            @ApiResponse(code = 400, message = "Неверные данные пользователя")
+            @ApiResponse(responseCode = "201", description = "Пользователь успешно добавлен"),
+            @ApiResponse(responseCode = "400", description = "Неверные данные пользователя")
     })
-    public ResponseEntity<Void> addUser(@ApiParam(value = "Данные пользователя", required = true) @RequestBody UserDTO userDTO) {
+    public ResponseEntity<Void> addUser(
+            @Parameter(description = "Данные пользователя", required = true) @Valid @RequestBody UserDTO userDTO) {
+
         User user = userMapper.userDTOToUser(userDTO);
-        System.out.println("Добавление пользователя: " + user);
         userService.addUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    /**
+     * Обновить информацию о пользователе.
+     *
+     * @param id            Идентификатор пользователя для обновления.
+     * @param updatedUserDTO Обновленные данные пользователя.
+     * @return Статус 200, если информация успешно обновлена,
+     *         статус 404, если пользователь не найден,
+     *         статус 500 при ошибке сервера.
+     */
     @PutMapping("/users/{id}")
-    @ApiOperation(value = "Обновить информацию о пользователе")
+    @Operation(description = "Обновить информацию о пользователе")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Информация о пользователе обновлена"),
-            @ApiResponse(code = 400, message = "Неверные данные пользователя"),
-            @ApiResponse(code = 404, message = "Пользователь не найден"),
-            @ApiResponse(code = 500, message = "Ошибка сервера")
+            @ApiResponse(responseCode = "200", description = "Информация о пользователе обновлена"),
+            @ApiResponse(responseCode = "400", description = "Неверные данные пользователя"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "500", description = "Ошибка сервера")
     })
-    public ResponseEntity<Void> updateUser(@ApiParam(value = "ID пользователя", required = true) @PathVariable("id") int id,
-                                           @ApiParam(value = "Обновленные данные пользователя", required = true) @RequestBody UserDTO updatedUserDTO) {
-        if (updatedUserDTO == null) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<Void> updateUser(
+            @Parameter(description = "ID пользователя", required = true) @PathVariable("id") int id,
+            @Parameter(description = "Обновленные данные пользователя", required = true) @Valid @RequestBody UserDTO updatedUserDTO) {
+
+        if (userService.getUserById(id) == null) {
+            return ResponseEntity.notFound().build();
         }
+
         User updatedUser = userMapper.userDTOToUser(updatedUserDTO);
         try {
-            if (userService.getUserById(id) == null) {
-                return ResponseEntity.notFound().build();
-            }
             userService.updateUser(id, updatedUser);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {

@@ -1,10 +1,10 @@
 package ru.yaone.controllers;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,116 +14,127 @@ import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.dto.CarDTO;
 import ru.yaone.mapper.CarMapper;
 import ru.yaone.model.Car;
-import ru.yaone.model.enumeration.CarCondition;
 import ru.yaone.services.CarService;
+
 import jakarta.validation.Valid;
 
 import java.util.List;
 
+/**
+ * Контроллер для работы с автомобилями.
+ */
 @Loggable
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
-@Api(value = "Car Controller", tags = "Операции по управлению автомобилями")
+@Tag(name = "Car Controller", description = "Операции по управлению автомобилями")
 public class CarController {
 
     private final CarService carService;
     private final CarMapper carMapper;
 
+    /**
+     * Получить всех автомобилей.
+     *
+     * @return Список автомобилей в формате CarDTO.
+     */
     @GetMapping(value = "/cars", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Получить всех автомобилей", response = CarDTO.class, responseContainer = "List")
+    @Operation(summary = "Получить всех автомобилей")
     public ResponseEntity<List<CarDTO>> getAllCars() {
         List<Car> cars = carService.getAllCars();
         List<CarDTO> carsDTO = carMapper.carToCarDTO(cars);
         return ResponseEntity.ok(carsDTO);
     }
 
+    /**
+     * Получить автомобиль по ID.
+     *
+     * @param id Идентификатор автомобиля.
+     * @return Автомобиль в формате CarDTO, если найден, иначе 404.
+     */
     @GetMapping("/cars/{id}")
-    @ApiOperation(value = "Получить автомобиль по ID", response = CarDTO.class)
+    @Operation(summary = "Получить автомобиль по ID")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Успешно найден автомобиль"),
-            @ApiResponse(code = 404, message = "Автомобиль не найден")
+            @ApiResponse(responseCode = "200", description = "Успешно найден автомобиль"),
+            @ApiResponse(responseCode = "404", description = "Автомобиль не найден")
     })
     public ResponseEntity<CarDTO> getCarById(
-            @ApiParam(value = "ID автомобиля", required = true) @PathVariable("id") int id) {
+            @Parameter(description = "ID автомобиля", required = true) @PathVariable("id") int id) {
+
         Car car = carService.getCarById(id);
-        if (car != null) {
-            CarDTO carDTO = carMapper.carToCarDTO(car);
-            return ResponseEntity.ok(carDTO);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return car != null
+                ? ResponseEntity.ok(carMapper.carToCarDTO(car))
+                : ResponseEntity.notFound().build();
     }
 
+    /**
+     * Добавить новый автомобиль.
+     *
+     * @param carDTO Данные автомобиля для добавления.
+     * @return Статус 201, если автомобиль успешно добавлен, или 400 при неправильных данных.
+     */
     @PostMapping(value = "/cars")
-    @ApiOperation(value = "Добавить новый автомобиль")
+    @Operation(summary = "Добавить новый автомобиль")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Автомобиль успешно добавлен"),
-            @ApiResponse(code = 400, message = "Неверные данные автомобиля")
+            @ApiResponse(responseCode = "201", description = "Автомобиль успешно добавлен"),
+            @ApiResponse(responseCode = "400", description = "Неверные данные автомобиля")
     })
     public ResponseEntity<Void> addCar(
-            @ApiParam(value = "Данные автомобиля", required = true) @RequestBody @Valid CarDTO carDTO) {
+            @Parameter(description = "Данные автомобиля", required = true) @RequestBody @Valid CarDTO carDTO) {
+
         Car car = carMapper.carDTOToCar(carDTO);
         carService.addCar(car);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    /**
+     * Удалить автомобиль по ID.
+     *
+     * @param id Идентификатор автомобиля для удаления.
+     * @return Статус 204, если автомобиль успешно удален, или 404, если автомобиль не найден.
+     */
     @DeleteMapping("/cars/{id}")
-    @ApiOperation(value = "Удалить автомобиль по ID")
+    @Operation(summary = "Удалить автомобиль по ID")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "Автомобиль успешно удален"),
-            @ApiResponse(code = 404, message = "Автомобиль не найден")
+            @ApiResponse(responseCode = "204", description = "Автомобиль успешно удален"),
+            @ApiResponse(responseCode = "404", description = "Автомобиль не найден")
     })
     public ResponseEntity<Void> deleteCarById(
-            @ApiParam(value = "ID автомобиля", required = true) @PathVariable("id") int id) {
+            @Parameter(description = "ID автомобиля", required = true) @PathVariable("id") int id) {
+
         boolean isDeleted = carService.deleteCarById(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
+    /**
+     * Обновить информацию об автомобиле.
+     *
+     * @param id            Идентификатор автомобиля для обновления.
+     * @param updatedCarDTO Обновленные данные автомобиля.
+     * @return Статус 200, если информация об автомобиле успешно обновлена,
+     * статус 400, если данные неверны,
+     * статус 404, если автомобиль не найден,
+     * статус 500, если произошла ошибка сервера.
+     */
     @PutMapping("/cars/{id}")
-    @ApiOperation(value = "Обновить информацию об автомобиле")
+    @Operation(summary = "Обновить информацию об автомобиле")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Информация об автомобиле обновлена"),
-            @ApiResponse(code = 400, message = "Неверные данные автомобиля"),
-            @ApiResponse(code = 404, message = "Автомобиль не найден"),
-            @ApiResponse(code = 500, message = "Ошибка сервера")
+            @ApiResponse(responseCode = "200", description = "Информация об автомобиле обновлена"),
+            @ApiResponse(responseCode = "400", description = "Неверные данные автомобиля"),
+            @ApiResponse(responseCode = "404", description = "Автомобиль не найден"),
+            @ApiResponse(responseCode = "500", description = "Ошибка сервера")
     })
     public ResponseEntity<Void> updateCar(
-            @ApiParam(value = "ID автомобиля", required = true) @PathVariable("id") int id,
-            @ApiParam(value = "Обновленные данные автомобиля", required = true) @RequestBody @Valid CarDTO updatedCarDTO) {
-        if (updatedCarDTO == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Car updatedCar = carMapper.carDTOToCar(updatedCarDTO);
-        try {
-            if (carService.getCarById(id) == null) {
-                return ResponseEntity.notFound().build();
-            }
-            carService.updateCar(id, updatedCar);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+            @Parameter(description = "ID автомобиля", required = true) @PathVariable("id") int id,
+            @Parameter(description = "Обновленные данные автомобиля", required = true) @RequestBody @Valid CarDTO updatedCarDTO) {
 
-    @GetMapping("/cars/search")
-    @ApiOperation(value = "Поиск автомобилей по параметрам")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Успешный поиск автомобилей"),
-            @ApiResponse(code = 500, message = "Ошибка сервера")
-    })
-    public ResponseEntity<List<CarDTO>> searchCars(
-            @ApiParam(value = "Имя клиента") @RequestParam(required = false) String clientName,
-            @ApiParam(value = "Модель автомобиля") @RequestParam(required = false) String model,
-            @ApiParam(value = "Год выпуска") @RequestParam(required = false) Integer year,
-            @ApiParam(value = "Цена") @RequestParam(required = false) Double price,
-            @ApiParam(value = "Состояние автомобиля") @RequestParam(required = false) CarCondition condition) {
-        try {
-            List<Car> cars = carService.searchCars(clientName, model, year, price, condition);
-            List<CarDTO> carsDTO = carMapper.carToCarDTO(cars);
-            return ResponseEntity.ok(carsDTO);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        Car existingCar = carService.getCarById(id);
+        if (existingCar == null) {
+            return ResponseEntity.notFound().build();
         }
+
+        Car updatedCar = carMapper.carDTOToCar(updatedCarDTO);
+        carService.updateCar(id, updatedCar);
+        return ResponseEntity.ok().build();
     }
 }

@@ -1,10 +1,10 @@
 package ru.yaone.controllers;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,85 +18,119 @@ import ru.yaone.services.ClientService;
 
 import java.util.List;
 
+/**
+ * Контроллер для работы с клиентами.
+ */
 @Loggable("Логирование контроллера ClientController")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
-@Api(value = "Client Controller", tags = "Операции с клиентами")
+@Tag(name = "Client Controller", description = "Операции с клиентами")
 public class ClientController {
 
     private final ClientService clientService;
     private final ClientMapper clientMapper;
 
+    /**
+     * Получить всех клиентов.
+     *
+     * @return Список клиентов в формате ClientDTO.
+     */
     @GetMapping(value = "/clients", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Получить всех клиентов", response = ClientDTO.class, responseContainer = "List")
+    @Operation(description = "Получить всех клиентов")
     public ResponseEntity<List<ClientDTO>> getAllClients() {
         List<Client> clients = clientService.getAllClients();
         List<ClientDTO> clientsDTO = clientMapper.clientToClientDTO(clients);
         return ResponseEntity.ok(clientsDTO);
     }
 
+    /**
+     * Получить клиента по ID.
+     *
+     * @param id Идентификатор клиента.
+     * @return Клиент в формате ClientDTO, если найден, иначе 404.
+     */
     @GetMapping("/clients/{id}")
-    @ApiOperation(value = "Получить клиента по ID", response = ClientDTO.class)
+    @Operation(description = "Получить клиента по ID")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Успешно найден клиент"),
-            @ApiResponse(code = 404, message = "Клиент не найден")
+            @ApiResponse(responseCode = "200", description = "Успешно найден клиент"),
+            @ApiResponse(responseCode = "404", description = "Клиент не найден")
     })
     public ResponseEntity<ClientDTO> getClientById(
-            @ApiParam(value = "ID клиента", required = true) @PathVariable("id") int id) {
+            @Parameter(description = "ID клиента", required = true) @PathVariable("id") int id) {
+
         Client client = clientService.getClientById(id);
-        if (client != null) {
-            ClientDTO clientDTO = clientMapper.clientToClientDTO(client);
-            return ResponseEntity.ok(clientDTO);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return client != null
+                ? ResponseEntity.ok(clientMapper.clientToClientDTO(client))
+                : ResponseEntity.notFound().build();
     }
 
+    /**
+     * Добавить нового клиента.
+     *
+     * @param clientDTO Данные клиента для добавления.
+     * @return Статус 201, если клиент успешно добавлен.
+     */
     @PostMapping(value = "/clients")
-    @ApiOperation(value = "Добавить нового клиента")
+    @Operation(description = "Добавить нового клиента")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Клиент успешно добавлен"),
-            @ApiResponse(code = 400, message = "Неверные данные клиента")
+            @ApiResponse(responseCode = "201", description = "Клиент успешно добавлен"),
+            @ApiResponse(responseCode = "400", description = "Неверные данные клиента")
     })
     public ResponseEntity<Void> addClient(
-            @ApiParam(value = "Данные клиента", required = true) @RequestBody ClientDTO clientDTO) {
+            @Parameter(description = "Данные клиента", required = true) @RequestBody ClientDTO clientDTO) {
+
         Client client = clientMapper.clientDTOToClient(clientDTO);
         clientService.addClient(client);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    /**
+     * Удалить клиента по ID.
+     *
+     * @param id Идентификатор клиента для удаления.
+     * @return Статус 204, если клиент успешно удален, или 404, если клиент не найден.
+     */
     @DeleteMapping("/clients/{id}")
-    @ApiOperation(value = "Удалить клиента по ID")
+    @Operation(description = "Удалить клиента по ID")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "Клиент успешно удален"),
-            @ApiResponse(code = 404, message = "Клиент не найден")
+            @ApiResponse(responseCode = "204", description = "Клиент успешно удален"),
+            @ApiResponse(responseCode = "404", description = "Клиент не найден")
     })
     public ResponseEntity<Void> deleteClientById(
-            @ApiParam(value = "ID клиента", required = true) @PathVariable("id") int id) {
+            @Parameter(description = "ID клиента", required = true) @PathVariable("id") int id) {
         boolean isDeleted = clientService.deleteClientById(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
+    /**
+     * Обновить информацию о клиенте.
+     *
+     * @param id               Идентификатор клиента для обновления.
+     * @param updatedClientDTO Обновленные данные клиента.
+     * @return Статус 200, если информация успешно обновлена,
+     * статус 400, если данные неверны,
+     * статус 404, если клиент не найден,
+     * статус 500 при ошибке сервера.
+     */
     @PutMapping("/clients/{id}")
-    @ApiOperation(value = "Обновить информацию о клиенте")
+    @Operation(description = "Обновить информацию о клиенте")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Информация о клиенте обновлена"),
-            @ApiResponse(code = 400, message = "Неверные данные клиента"),
-            @ApiResponse(code = 404, message = "Клиент не найден"),
-            @ApiResponse(code = 500, message = "Ошибка сервера")
+            @ApiResponse(responseCode = "200", description = "Информация о клиенте обновлена"),
+            @ApiResponse(responseCode = "400", description = "Неверные данные клиента"),
+            @ApiResponse(responseCode = "404", description = "Клиент не найден"),
+            @ApiResponse(responseCode = "500", description = "Ошибка сервера")
     })
     public ResponseEntity<Void> updateClient(
-            @ApiParam(value = "ID клиента", required = true) @PathVariable("id") int id,
-            @ApiParam(value = "Обновленные данные клиента", required = true) @RequestBody ClientDTO updatedClientDTO) {
-        if (updatedClientDTO == null) {
-            return ResponseEntity.badRequest().build();
+            @Parameter(description = "ID клиента", required = true) @PathVariable("id") int id,
+            @Parameter(description = "Обновленные данные клиента", required = true) @RequestBody ClientDTO updatedClientDTO) {
+
+        if (clientService.getClientById(id) == null) {
+            return ResponseEntity.notFound().build();
         }
+
         Client updatedClient = clientMapper.clientDTOToClient(updatedClientDTO);
         try {
-            if (clientService.getClientById(id) == null) {
-                return ResponseEntity.notFound().build();
-            }
             clientService.updateClient(id, updatedClient);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
