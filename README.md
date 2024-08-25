@@ -7,6 +7,8 @@
 
 [HW3](https://github.com/Temzor/car_shop_for_y_lab/pull/4)
 
+[HW4](https://github.com/Temzor/car_shop_for_y_lab/pull/5)
+
 ## Запуск проекта:
 
 1. Запустите в консоли по относительному пути ./car_dealership_for_y_lab/target/ lar file
