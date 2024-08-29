@@ -24,8 +24,12 @@ public class UserServiceImpl implements UserService {
      *
      * @param user пользователь, которого необходимо добавить
      */
-    @Override
     public void addUser(User user) {
+        for (User existingUser : users) {
+            if (existingUser.id() == user.id()) {
+                throw new IllegalArgumentException("User with this ID already exists.");
+            }
+        }
         users.add(user);
     }
 

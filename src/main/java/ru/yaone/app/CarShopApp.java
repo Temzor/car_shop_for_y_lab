@@ -1,5 +1,7 @@
 package ru.yaone.app;
 
+import lombok.Getter;
+import lombok.Setter;
 import ru.yaone.impl.AuditServiceImpl;
 import ru.yaone.impl.CarServiceImpl;
 import ru.yaone.impl.OrderServiceImpl;
@@ -30,12 +32,14 @@ import java.util.Scanner;
  * Внутри класса используются службы для работы с автомобилями, заказами, пользователями и аудиторией.
  * </p>
  */
+@Setter
+@Getter
 public class CarShopApp {
-    private final Scanner scanner = new Scanner(System.in);
+    Scanner scanner = new Scanner(System.in);
     private final CarService carService = new CarServiceImpl();
     private final OrderService orderService = new OrderServiceImpl();
-    private final UserService userService = new UserServiceImpl();
-    private final AuditService auditService = new AuditServiceImpl();
+    UserService userService = new UserServiceImpl();
+    AuditService auditService = new AuditServiceImpl();
     User loggedInUser;
 
     /**
@@ -60,6 +64,7 @@ public class CarShopApp {
      * </p>
      */
     public void showMainMenu() {
+        Scanner scanner = new Scanner(System.in); // Используем стандартный ввод напрямую
         while (true) {
             try {
                 System.out.println("1. Вход");
@@ -67,11 +72,14 @@ public class CarShopApp {
                 System.out.println("3. Выход");
                 System.out.print("Выберите действие: ");
                 int choice = scanner.nextInt();
-                scanner.nextLine();
+                scanner.nextLine(); // Подходит для обработки возможного остатка строки
                 switch (choice) {
                     case 1 -> login();
                     case 2 -> register();
-                    case 3 -> System.exit(0);
+                    case 3 -> {
+                        System.out.println("Выход из приложения.");
+                        return;
+                    }
                     default -> System.out.println("Не верный выбор, попробуйте еще раз.");
                 }
             } catch (InputMismatchException e) {
@@ -91,7 +99,7 @@ public class CarShopApp {
      * В противном случае выводится сообщение о неверных данных.
      * </p>
      */
-    private void login() {
+    void login() {
         try {
             System.out.print("Введите имя пользователя: ");
             String username = scanner.nextLine();
@@ -121,7 +129,7 @@ public class CarShopApp {
      * В случае ошибок ввода пользователю выводится соответствующее сообщение.
      * </p>
      */
-    private void register() {
+    void register() {
         try {
             System.out.print("Имя пользователя: ");
             String username = scanner.nextLine();
@@ -322,11 +330,9 @@ public class CarShopApp {
      * </p>
      */
     private void viewUsers() {
-        userService.getAllUsers().forEach(user -> {
-            System.out.println("ID: " + user.id()
-                    + ", Имя пользователя: " + user.username()
-                    + ", Роль пользователя: " + user.role());
-        });
+        userService.getAllUsers().forEach(user -> System.out.println("ID: " + user.id()
+                + ", Имя пользователя: " + user.username()
+                + ", Роль пользователя: " + user.role()));
     }
 
     /**
@@ -464,14 +470,12 @@ public class CarShopApp {
      * </p>
      */
     void viewCars() {
-        carService.getAllCars().forEach(car -> {
-            System.out.println("ID: " + car.id()
-                    + ", Марка: " + car.make()
-                    + ", Модель: " + car.model()
-                    + ", Год производства: " + car.year()
-                    + ", Цена: " + car.price()
-                    + ", Состояние: " + car.condition());
-        });
+        carService.getAllCars().forEach(car -> System.out.println("ID: " + car.id()
+                + ", Марка: " + car.make()
+                + ", Модель: " + car.model()
+                + ", Год производства: " + car.year()
+                + ", Цена: " + car.price()
+                + ", Состояние: " + car.condition()));
     }
 
     /**
@@ -483,7 +487,7 @@ public class CarShopApp {
      * Также записывается действие в журнал аудита.
      * </p>
      */
-    void addCar() {
+    public void addCar() {
         System.out.print("Марка: ");
         String make = scanner.nextLine();
         System.out.print("Модель: ");
@@ -624,14 +628,12 @@ public class CarShopApp {
         CarCondition condition = CarCondition.valueOf(scanner.nextLine().toUpperCase());
 
         List<Car> cars = carService.searchCars(make, model, year, price, condition);
-        cars.forEach(car -> {
-            System.out.println("ID: " + car.id()
-                    + ", Марка: " + car.make()
-                    + ", Модель: " + car.model()
-                    + ", Год производства: " + car.year()
-                    + ", Цена: " + car.price()
-                    + ", Состояние: " + car.condition());
-        });
+        cars.forEach(car -> System.out.println("ID: " + car.id()
+                + ", Марка: " + car.make()
+                + ", Модель: " + car.model()
+                + ", Год производства: " + car.year()
+                + ", Цена: " + car.price()
+                + ", Состояние: " + car.condition()));
     }
 
     /**
@@ -654,13 +656,11 @@ public class CarShopApp {
      * </p>
      */
     private void viewOrders() {
-        orderService.getAllOrders().forEach(order -> {
-            System.out.println("ID: " + order.id()
-                    + ", Клиент: " + order.client().user().username()
-                    + ", Автомобиль: " + order.car().make() + " " + order.car().model()
-                    + ", Дата: " + order.creationDate()
-                    + ", Статус: " + order.status());
-        });
+        orderService.getAllOrders().forEach(order -> System.out.println("ID: " + order.id()
+                + ", Клиент: " + order.client().user().username()
+                + ", Автомобиль: " + order.car().make() + " " + order.car().model()
+                + ", Дата: " + order.creationDate()
+                + ", Статус: " + order.status()));
     }
 
     /**
@@ -731,13 +731,11 @@ public class CarShopApp {
             LocalDateTime to = LocalDateTime.parse(scanner.nextLine() + "T23:59:59");
 
             List<Order> orders = orderService.searchOrders(from, to, null, null, null);
-            orders.forEach(order -> {
-                System.out.println("ID: " + order.id()
-                        + ", Клиент: " + order.client().user().username()
-                        + ", Автомобиль: " + order.car().make() + " " + order.car().model()
-                        + ", Дата: " + order.creationDate()
-                        + ", Статус: " + order.status());
-            });
+            orders.forEach(order -> System.out.println("ID: " + order.id()
+                    + ", Клиент: " + order.client().user().username()
+                    + ", Автомобиль: " + order.car().make() + " " + order.car().model()
+                    + ", Дата: " + order.creationDate()
+                    + ", Статус: " + order.status()));
         } catch (DateTimeParseException e) {
             System.out.println("Ошибка парсинга даты: " + e.getMessage());
         }
@@ -762,10 +760,8 @@ public class CarShopApp {
      * </p>
      */
     private void viewAuditLog() {
-        auditService.getAllLogs().forEach(log -> {
-            System.out.println("Timestamp: " + log.timestamp()
-                    + ", Пользователь: " + log.user().username()
-                    + ", Действие: " + log.action());
-        });
+        auditService.getAllLogs().forEach(log -> System.out.println("Timestamp: " + log.timestamp()
+                + ", Пользователь: " + log.user().username()
+                + ", Действие: " + log.action()));
     }
 }

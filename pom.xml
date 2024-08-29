@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ru.car_dealership_for_y_lab</groupId>
-    <artifactId>car_dealership_for_y_lab</artifactId>
+    <groupId>car_shop_for_y_lab</groupId>
+    <artifactId>car_shop_for_y_lab</artifactId>
     <version>1.0.0.1-beta</version>
 
-    <name>tcar_dealership_for_y_lab</name>
+    <name>car_shop_for_y_lab</name>
     <description>A simple car_dealership_for_y_lab</description>
     <url>https://www.example.com</url>
 
@@ -89,6 +89,13 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <version>2.17.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.12.0</version>
+            <scope>test</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
         <dependency>

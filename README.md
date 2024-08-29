@@ -11,9 +11,9 @@
 
 ## Запуск проекта:
 
-1. Запустите в консоли по относительному пути ./car_dealership_for_y_lab/target/ lar file
-   car_dealership_for_y_lab-1.0.0.1-beta.jar
-2. Для запуска используйте команды java -jar car_dealership_for_y_lab-1.0.0.1-beta.jar
+1. Запустите в консоли по относительному пути ./car_shop_for_y_lab/target/ lar file
+   car_shop_for_y_lab-1.0.0.1-beta.jar
+2. Для запуска используйте команды java -jar car_shop_for_y_lab-1.0.0.1-beta.jar
 
 ## О проекте
 
