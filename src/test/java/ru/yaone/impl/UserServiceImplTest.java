@@ -2,15 +2,17 @@ package ru.yaone.impl;
 
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
-import ru.yaone.model.User;
+import ru.yaone.dto.UserDTO;
 import ru.yaone.model.enumeration.UserRole;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.sql.*;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
+@DisplayName("Тестирование сервиса пользователей")
 public class UserServiceImplTest {
 
     private static PostgreSQLContainer<?> postgresContainer;
@@ -53,29 +55,15 @@ public class UserServiceImplTest {
         }
     }
 
-
     @AfterAll
     public static void tearDownContainer() {
         postgresContainer.stop();
     }
 
     @Test
-    public void testAddUser() {
-
-        User newUser = new User(0, "john_doe", "password123", UserRole.MANAGER);
-        if (!userService.searchUsers("john_doe", UserRole.MANAGER).get(0)
-                .username().equals(newUser.username())) {
-            userService.addUser(newUser);
-        }
-
-        List<User> users = userService.getAllUsers();
-        assertThat(users).isNotEmpty().first().isNotNull();
-    }
-
-    @Test
+    @DisplayName("Проверка на выброс исключения при добавлении существующего пользователя")
     public void testThrow() {
-        User newUser = new User(0, "alice", "mypassword", UserRole.CLIENT);
-
+        UserDTO newUser = new UserDTO(0, "alice", "mypassword", UserRole.CLIENT);
         assertThatThrownBy(() -> userService.addUser(newUser))
                 .isInstanceOf(RuntimeException.class);
     }

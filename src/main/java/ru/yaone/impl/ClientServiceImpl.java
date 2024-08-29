@@ -1,5 +1,8 @@
 package ru.yaone.impl;
 
+import ru.yaone.aspect.annotation.Loggable;
+import ru.yaone.constants.SqlScriptsForClients;
+import ru.yaone.dto.ClientDTO;
 import ru.yaone.manager.DatabaseConnectionManager;
 import ru.yaone.model.Client;
 import ru.yaone.services.ClientService;
@@ -10,33 +13,30 @@ import java.util.List;
 
 /**
  * Реализация сервиса для управления клиентами.
- *
- * <p>Этот класс обеспечивает операции с клиентами, такие как добавление клиента,
- * получение списка всех клиентов и получение информации о клиенте по идентификатору.</p>
+ * <p>Данный класс предоставляет методы для добавления клиентов и получения списка всех клиентов.</p>
  */
+@Loggable("Логирование класса ClientServiceImpl")
 public class ClientServiceImpl implements ClientService {
 
-    @Override
     /**
      * Добавляет нового клиента в базу данных.
+     * <p>Метод принимает объект {@code ClientDTO}, извлекает информацию о клиенте
+     * и выполняет SQL-запрос для его добавления в базу данных. Если операция проходит
+     * успешно, клиент сохраняется в базе данных, иначе выбрасывается исключение.</p>
      *
-     * <p>Метод выполняет SQL-запрос для вставки нового клиента в таблицу
-     * <code>clients</code>. Идентификатор клиента автоматически генерируется с помощью
-     * последовательности, и возвращается идентификатор добавленного клиента.</p>
-     *
-     * @param client объект Client, представляющий клиента, которого необходимо добавить
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
+     * @param clientDTO объект, содержащий информацию о клиенте, который необходимо добавить
+     * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
      */
-    public void addClient(Client client) {
-        String sql = "INSERT INTO car_shop.clients (id, client_name, contact_info) "
-                + "VALUES (nextval('clients_id_seq'), ?, ?) RETURNING id";
+    @Loggable("Логирование метода ClientServiceImpl.addClient")
+    @Override
+    public void addClient(ClientDTO clientDTO) {
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, client.clientName());
-            pstmt.setString(2, client.contactInfo());
-            try (ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.ADD_CLIENT)) {
+            preparedStatement.setString(1, clientDTO.getClientName());
+            preparedStatement.setString(2, clientDTO.getContactInfo());
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    new Client(rs.getInt(1), client.clientName(), client.contactInfo());
+                    new Client(rs.getInt(1), clientDTO.getClientName(), clientDTO.getContactInfo());
                 }
             }
         } catch (SQLException e) {
@@ -45,57 +45,55 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    @Override
     /**
      * Получает список всех клиентов из базы данных.
+     * <p>Метод выполняет SQL-запрос для получения всех клиентов и возвращает
+     * список объектов {@code ClientDTO} с информацией о каждом клиенте.</p>
      *
-     * <p>Метод выполняет SQL-запрос для получения всех клиентов из таблицы
-     * <code>clients</code> и возвращает их в виде списка.</p>
-     *
-     * @return список объектов Client, представляющих всех клиентов в системе
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
+     * @return список {@code ClientDTO}, содержащий всех клиентов из базы данных
+     * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
      */
-    public List<Client> getAllClients() {
-        List<Client> clients = new ArrayList<>();
-        String sql = "SELECT id, client_name, contact_info FROM car_shop.clients";
+    @Loggable("Логирование метода ClientServiceImpl.getAllClients")
+    @Override
+    public List<ClientDTO> getAllClients() {
+        List<ClientDTO> clientDTOS = new ArrayList<>();
         try (Connection conn = DatabaseConnectionManager.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             ResultSet rs = stmt.executeQuery(SqlScriptsForClients.GET_ALL_CLIENTS)) {
             while (rs.next()) {
-                Client client = new Client(
+                ClientDTO clientDTO = new ClientDTO(
                         rs.getInt("id"),
                         rs.getString("client_name"),
                         rs.getString("contact_info")
                 );
-                clients.add(client);
+                clientDTOS.add(clientDTO);
             }
         } catch (SQLException e) {
             System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении клиентов", e);
         }
-        return clients;
+        return clientDTOS;
     }
 
-    @Override
+
     /**
-     * Получает клиента из базы данных по его идентификатору.
+     * Получает информацию о клиенте по его идентификатору.
+     * <p>Метод выполняет SQL-запрос для получения клиента из базы данных на основе его идентификатора.
+     * Если клиент с данным ID найден, возвращается объект {@code ClientDTO}. В противном случае возвращается {@code null}.</p>
      *
-     * <p>Метод выполняет SQL-запрос для получения клиента с указанным идентификатором
-     * из таблицы <code>clients</code>. Если клиент найден, он возвращается; если
-     * нет, возвращается <code>null</code>.</p>
-     *
-     * @param id идентификатор клиента, которого необходимо получить
-     * @return объект Client, представляющий клиента, или <code>null</code>, если клиент не найден
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
+     * @param id идентификатор клиента, информацию о котором необходимо получить
+     * @return объект {@code ClientDTO} с информацией о клиенте или {@code null}, если клиент не найден
+     * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
      */
-    public Client getClientById(int id) {
-        String sql = "SELECT id, client_name, contact_info FROM car_shop.clients WHERE id = ?";
+    @Loggable("Логирование метода ClientServiceImpl.getClientById")
+    @Override
+    public ClientDTO getClientById(int id) {
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.GET_CLIENTS_BY_ID)) {
+            preparedStatement.setInt(1, id);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    return new Client(
+                    return new ClientDTO(
                             rs.getInt("id"),
                             rs.getString("client_name"),
                             rs.getString("contact_info")
@@ -103,59 +101,59 @@ public class ClientServiceImpl implements ClientService {
                 }
             }
         } catch (SQLException e) {
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении клиента по ID", e);
         }
         return null;
     }
 
+    /**
+     * Удаляет клиента из базы данных по его идентификатору.
+     * <p>Метод выполняет SQL-запрос для удаления клиента. Если клиент с указанным ID найден и удален,
+     * возвращает {@code true}. Если клиент не найден, возвращает {@code false}.</p>
+     *
+     * @param id идентификатор клиента, которого необходимо удалить
+     * @return {@code true}, если клиент успешно удален, иначе {@code false}
+     * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
+     */
+    @Loggable("Логирование метода ClientServiceImpl.deleteClientById")
     @Override
-/**
- * Удаляет клиента из базы данных по его идентификатору.
- *
- * <p>Метод выполняет SQL-запрос для удаления клиента с указанным идентификатором
- * из таблицы <code>clients</code>. Если клиент успешно удалён, выводится сообщение
- * об этом; если клиент не найден, выводится сообщение о том, что клиент не найден.</p>
- *
- * @param id идентификатор клиента, которого необходимо удалить
- * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
- */
-    public void deleteClientById(int id) {
-        String sql = "DELETE FROM car_shop.clients WHERE id = ?";
+    public boolean deleteClientById(int id) {
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            int affectedRows = pstmt.executeUpdate();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.DELETED_CLIENTS_BY_ID)) {
+            preparedStatement.setInt(1, id);
+            int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows > 0) {
                 System.out.println("Клиент успешно удален.");
+                return true;
             } else {
                 System.out.println("Клиент не найден.");
+                return false;
             }
         } catch (SQLException e) {
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при удалении клиента", e);
         }
     }
 
+    /**
+     * Обновляет информацию о клиенте.
+     * <p>Метод выполняет SQL-запрос для обновления информации о клиенте в базе данных на основе его идентификатора.
+     * Если обновление прошло успешно, выводится сообщение об успешном обновлении, в противном случае — о том, что клиент не найден.</p>
+     *
+     * @param id               идентификатор клиента, которого необходимо обновить
+     * @param updatedClientDTO объект {@code ClientDTO}, содержащий обновленную информацию о клиенте
+     * @throws RuntimeException если произошла ошибка при выполнении SQL-запроса
+     */
+    @Loggable("Логирование метода ClientServiceImpl.updateClient")
     @Override
-/**
- * Обновляет информацию о клиенте в базе данных.
- *
- * <p>Метод выполняет SQL-запрос для обновления информации о клиенте с указанным
- * идентификатором в таблице <code>clients</code>. Если клиент найден и информация
- * успешно обновлена, выводится соответствующее сообщение; если клиент не найден,
- * выводится сообщение об этом.</p>
- *
- * @param id идентификатор клиента, информацию о котором необходимо обновить
- * @param updatedClient объект Client, содержащий новые данные для обновления
- * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
- */
-    public void updateClient(int id, Client updatedClient) {
-        String sql = "UPDATE car_shop.clients SET client_name = ?, contact_info = ? WHERE id = ?";
+    public void updateClient(int id, ClientDTO updatedClientDTO) {
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, updatedClient.clientName());
-            pstmt.setString(2, updatedClient.contactInfo());
-            pstmt.setInt(3, id);
-            int affectedRows = pstmt.executeUpdate();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForClients.UPDATE_CLIENT)) {
+            preparedStatement.setString(1, updatedClientDTO.getClientName());
+            preparedStatement.setString(2, updatedClientDTO.getContactInfo());
+            preparedStatement.setInt(3, id);
+            int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows > 0) {
                 System.out.println("Клиент успешно обновлен.");
             } else {

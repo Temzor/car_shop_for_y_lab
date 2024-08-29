@@ -4,37 +4,47 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="1" author="user">
+    <changeSet id="1" author="temzor (generated)">
         <!-- Заполняем таблицу users данными -->
         <insert tableName="users" schemaName="car_shop">
             <column name="username" value="1"/>
             <column name="password" value="1"/>
             <column name="role" value="ADMIN"/>
         </insert>
+
         <insert tableName="users" schemaName="car_shop">
             <column name="username" value="2"/>
             <column name="password" value="2"/>
             <column name="role" value="MANAGER"/>
         </insert>
+
         <insert tableName="users" schemaName="car_shop">
             <column name="username" value="3"/>
             <column name="password" value="3"/>
             <column name="role" value="CLIENT"/>
         </insert>
+
+        <setTableRemarks schemaName="car_shop" tableName="users"
+                         remarks="Заполнение таблицы пользователей с начальными данными для ролей: ADMIN, MANAGER и CLIENT."/>
     </changeSet>
-    <changeSet id="2" author="user">
+
+    <changeSet id="2" author="temzor (generated)">
         <!-- Заполняем таблицу clients данными -->
         <insert tableName="clients" schemaName="car_shop">
             <column name="client_name" value="John Smith"/>
             <column name="contact_info" value="john.smith@example.com"/>
         </insert>
+
         <insert tableName="clients" schemaName="car_shop">
             <column name="client_name" value="Jane Doe"/>
             <column name="contact_info" value="jane.doe@example.com"/>
         </insert>
+
+        <setTableRemarks schemaName="car_shop" tableName="clients"
+                         remarks="Заполнение таблицы клиентов с начальными данными: John Smith и Jane Doe с их контактной информацией."/>
     </changeSet>
 
-    <changeSet id="3" author="user">
+    <changeSet id="3" author="temzor (generated)">
         <!-- Заполняем таблицу cars данными -->
         <insert tableName="cars" schemaName="car_shop">
             <column name="make" value="Toyota"/>
@@ -43,6 +53,7 @@
             <column name="price" valueNumeric="24000"/>
             <column name="condition" value="NEW"/>
         </insert>
+
         <insert tableName="cars" schemaName="car_shop">
             <column name="make" value="Honda"/>
             <column name="model" value="Civic"/>
@@ -50,9 +61,12 @@
             <column name="price" valueNumeric="20000"/>
             <column name="condition" value="USED"/>
         </insert>
+
+        <setTableRemarks schemaName="car_shop" tableName="cars"
+                         remarks="Заполнение таблицы автомобилей с данными о новых и подержанных автомобилях: Toyota Camry (2020) и Honda Civic (2019)."/>
     </changeSet>
 
-    <changeSet id="4" author="user">
+    <changeSet id="4" author="temzor (generated)">
         <!-- Заполняем таблицу orders данными -->
         <insert tableName="orders" schemaName="car_shop">
             <column name="client_id" valueNumeric="1"/>
@@ -60,20 +74,29 @@
             <column name="creation_date" valueDate="2023-01-01 10:00:00"/>
             <column name="status" value="PENDING"/>
         </insert>
+
         <insert tableName="orders" schemaName="car_shop">
             <column name="client_id" valueNumeric="2"/>
             <column name="car_id" valueNumeric="2"/>
             <column name="creation_date" valueDate="2023-02-01 11:00:00"/>
-            <column name="status" value="COMPLETED"/>
+            <column name="status" value="REJECTED"/>
         </insert>
+
+        <setTableRemarks schemaName="car_shop" tableName="orders"
+                         remarks="Заполнение таблицы заказов с данными о заказах клиентов для автомобилей: заказ 1 (ожидание) и заказ 2 (отклонённый)."/>
     </changeSet>
 
-    <changeSet id="5" author="user">
+    <changeSet id="5" author="temzor (generated)">
         <!-- Заполняем таблицу audit_logs данными -->
-        <insert tableName="audit_logs" schemaName="car_shop">
-            <column name="user_id" valueComputed="(SELECT id FROM car_shop.users LIMIT 1)"/>
-            <column name="log_message" value="Юзер произвел вход"/>
-            <column name="log_date" value="2023-01-01 10:00:00"/>
+        <insert tableName="audit_log" schemaName="car_shop">
+            <column name="method_name" valueComputed="'Login'"/>
+            <column name="method_args" valueComputed="'last'"/>
+            <column name="execution_time" value="180"/>
+            <column name="result" value="200:OK"/>
+            <column name="timestamp" value="2023-01-01 10:00:00"/>
         </insert>
+
+        <setTableRemarks schemaName="car_shop" tableName="audit_log"
+                         remarks="Заполнение таблицы журналов аудита с данными о методе входа в систему: логин с успешным результатом."/>
     </changeSet>
 </databaseChangeLog>

@@ -1,7 +1,6 @@
 package ru.yaone.services;
 
-import ru.yaone.model.User;
-import ru.yaone.model.enumeration.UserRole;
+import ru.yaone.dto.UserDTO;
 
 import java.util.List;
 
@@ -18,16 +17,16 @@ public interface UserService {
     /**
      * Добавляет нового пользователя в систему.
      *
-     * @param user объект пользователя, который необходимо добавить
+     * @param userDTO объект пользователя, который необходимо добавить
      */
-    void addUser(User user);
+    void addUser(UserDTO userDTO);
 
     /**
      * Получает список всех пользователей в системе.
      *
      * @return список всех пользователей
      */
-    List<User> getAllUsers();
+    List<UserDTO> getAllUsers();
 
     /**
      * Получает пользователя по его идентификатору.
@@ -36,29 +35,13 @@ public interface UserService {
      * @return объект пользователя с указанным идентификатором или null,
      * если пользователь не найден
      */
-    User getUserById(int id);
-
-    /**
-     * Ищет пользователей по заданным критериям.
-     *
-     * @param name имя пользователя для поиска
-     * @param role роль пользователя для поиска
-     * @return список пользователей, удовлетворяющих заданным критериям
-     */
-    List<User> searchUsers(String name, UserRole role);
+    UserDTO getUserById(int id);
 
     /**
      * Обновляет информацию о пользователе.
      *
-     * @param id          идентификатор пользователя, который необходимо обновить
-     * @param updatedUser объект пользователя с обновлённой информацией
+     * @param id             идентификатор пользователя, который необходимо обновить
+     * @param updatedUserDTO объект пользователя с обновлённой информацией
      */
-    void updateUser(int id, User updatedUser);
-
-    /**
-     * Удаляет пользователя из системы по его идентификатору.
-     *
-     * @param id идентификатор пользователя, который необходимо удалить
-     */
-    void deleteUser(int id);
+    void updateUser(int id, UserDTO updatedUserDTO);
 }

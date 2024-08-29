@@ -1,11 +1,7 @@
 package ru.yaone.services;
 
-import ru.yaone.model.Car;
-import ru.yaone.model.Client;
-import ru.yaone.model.Order;
-import ru.yaone.model.enumeration.OrderStatus;
+import ru.yaone.dto.OrderDTO;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -21,16 +17,16 @@ public interface OrderService {
     /**
      * Добавляет новый заказ в систему.
      *
-     * @param order объект заказа, который необходимо добавить
+     * @param orderDTO объект заказа, который необходимо добавить
      */
-    void addOrder(Order order);
+    void addOrder(OrderDTO orderDTO);
 
     /**
      * Получает список всех заказов в системе.
      *
      * @return список всех заказов
      */
-    List<Order> getAllOrders();
+    List<OrderDTO> getAllOrders();
 
     /**
      * Получает заказ по его идентификатору.
@@ -39,32 +35,20 @@ public interface OrderService {
      * @return объект заказа с указанным идентификатором или null,
      * если заказ не найден
      */
-    Order getOrderById(int id);
+    OrderDTO getOrderById(int id);
 
     /**
      * Обновляет информацию о заказе.
      *
-     * @param id           идентификатор заказа, который необходимо обновить
-     * @param updatedOrder объект заказа с обновлённой информацией
+     * @param id              идентификатор заказа, который необходимо обновить
+     * @param updatedOrderDTO объект заказа с обновлённой информацией
      */
-    void updateOrder(int id, Order updatedOrder);
+    void updateOrder(int id, OrderDTO updatedOrderDTO);
 
     /**
      * Удаляет заказ из системы по его идентификатору.
      *
      * @param id идентификатор заказа, который необходимо удалить
      */
-    void deleteOrderById(int id);
-
-    /**
-     * Ищет заказы по заданным критериям.
-     *
-     * @param from   дата и время начала диапазона поиска
-     * @param to     дата и время окончания диапазона поиска
-     * @param client клиент, для которого осуществляется поиск заказов
-     * @param status статус заказа
-     * @param car    автомобиль, связанный с заказом
-     * @return список заказов, удовлетворяющих заданным критериям
-     */
-    List<Order> searchOrders(LocalDateTime from, LocalDateTime to, Client client, OrderStatus status, Car car);
+    boolean deleteOrderById(int id);
 }

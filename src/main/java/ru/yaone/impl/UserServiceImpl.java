@@ -1,5 +1,8 @@
 package ru.yaone.impl;
 
+import ru.yaone.aspect.annotation.Loggable;
+import ru.yaone.constants.SqlScriptsForUsers;
+import ru.yaone.dto.UserDTO;
 import ru.yaone.model.User;
 import ru.yaone.model.enumeration.UserRole;
 import ru.yaone.services.UserService;
@@ -12,36 +15,36 @@ import java.util.List;
 /**
  * Реализация сервиса пользователей для управления операциями с пользователями.
  */
+@Loggable("Логирование класса UserServiceImpl")
 public class UserServiceImpl implements UserService {
-
     /**
      * Добавляет нового пользователя в базу данных.
      *
      * <p>Перед добавлением проверяет, не занято ли имя пользователя. Если имя занято,
      * выбрасывается RuntimeException. Если имя свободно, пользователь добавляется в базу данных.</p>
      *
-     * @param user объект пользователя, который необходимо добавить в систему
+     * @param userDTO объект пользователя, который необходимо добавить в систему
      * @throws RuntimeException если имя пользователя уже занято или произошла ошибка во время SQL-запроса
      */
+    @Loggable("Логирование метода UserServiceImpl.addUser")
     @Override
-    public void addUser(User user) {
-        if (isUsernameTaken(user.username())) {
-            throw new RuntimeException("Пользователь с именем " + user.username() + " уже существует.");
+    public void addUser(UserDTO userDTO) {
+        if (isUsernameTaken(userDTO.getUsername())) {
+            throw new RuntimeException("Пользователь с именем " + userDTO.getUsername() + " уже существует.");
         }
-        String sql = "INSERT INTO car_shop.users (id, username, password, role) VALUES (nextval('car_shop.users_id_seq'), ?, ?, ?) RETURNING id";
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, user.username());
-            pstmt.setString(2, user.password());
-            pstmt.setString(3, user.role().toString());
-            try (ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.ADD_USER)) {
+            preparedStatement.setString(1, userDTO.getUsername());
+            preparedStatement.setString(2, userDTO.getPassword());
+            preparedStatement.setString(3, userDTO.getRole().toString());
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    new User(rs.getInt(1), user.username(), user.password(), user.role());
+                    new User(rs.getInt(1), userDTO.getUsername(), userDTO.getPassword(), userDTO.getRole());
                     System.out.println("Пользователь успешно зарегистрирован.");
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Ошибка SQL: " + e.getMessage() + sql);
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при добавлении пользователя", e);
         }
     }
@@ -53,18 +56,18 @@ public class UserServiceImpl implements UserService {
      * @return true, если имя пользователя занято; false в противном случае
      * @throws RuntimeException если произошла ошибка во время SQL-запроса
      */
+    @Loggable("Логирование метода UserServiceImpl.isUsernameTaken")
     private boolean isUsernameTaken(String username) {
-        String sql = "SELECT COUNT(*) FROM car_shop.users WHERE username = ?";
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, username);
-            try (ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.GET_USER)) {
+            preparedStatement.setString(1, username);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Ошибка SQL: " + e.getMessage() + sql);
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при проверке имени пользователя", e);
         }
         return false;
@@ -76,27 +79,27 @@ public class UserServiceImpl implements UserService {
      * @return список пользователей
      * @throws RuntimeException если произошла ошибка во время SQL-запроса
      */
+    @Loggable("Логирование метода UserServiceImpl.getAllUsers")
     @Override
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT id, username, password, role FROM car_shop.users";
+    public List<UserDTO> getAllUsers() {
+        List<UserDTO> usersDTO = new ArrayList<>();
         try (Connection conn = DatabaseConnectionManager.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             ResultSet rs = stmt.executeQuery(SqlScriptsForUsers.GET_ALL_USERS)) {
             while (rs.next()) {
-                User user = new User(
+                UserDTO userDTO = new UserDTO(
                         rs.getInt("id"),
                         rs.getString("username"),
                         rs.getString("password"),
                         UserRole.valueOf(rs.getString("role"))
                 );
-                users.add(user);
+                usersDTO.add(userDTO);
             }
         } catch (SQLException e) {
-            System.err.println("Ошибка SQL: " + e.getMessage() + sql);
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении пользователей", e);
         }
-        return users;
+        return usersDTO;
     }
 
     /**
@@ -109,15 +112,15 @@ public class UserServiceImpl implements UserService {
      * @return объект {@link User} с данными пользователя или null, если пользователь не найден
      * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
      */
+    @Loggable("Логирование метода UserServiceImpl.getUserById")
     @Override
-    public User getUserById(int id) {
-        String sql = "SELECT id, username, password, role FROM car_shop.users WHERE id = ?";
+    public UserDTO getUserById(int id) {
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.GET_USER_BY_ID)) {
+            preparedStatement.setInt(1, id);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    return new User(
+                    return new UserDTO(
                             rs.getInt("id"),
                             rs.getString("username"),
                             rs.getString("password"),
@@ -126,47 +129,10 @@ public class UserServiceImpl implements UserService {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Ошибка SQL: " + e.getMessage() + sql);
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при получении пользователя по ID", e);
         }
         return null;
-    }
-
-    /**
-     * Поиск пользователей по имени и роли.
-     *
-     * <p>Метод возвращает список пользователей, чье имя соответствует заданному шаблону и у
-     * которых указана определенная роль.</p>
-     *
-     * @param name имя пользователя или часть имени для поиска
-     * @param role роль пользователей для фильтрации
-     * @return список пользователей {@link List<User>} соответствующих критериям поиска
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
-    @Override
-    public List<User> searchUsers(String name, UserRole role) {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT id, username, password, role FROM car_shop.users WHERE username LIKE ? AND role = ?";
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, "%" + name + "%");
-            pstmt.setString(2, role.toString());
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    User user = new User(
-                            rs.getInt("id"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            UserRole.valueOf(rs.getString("role"))
-                    );
-                    users.add(user);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Ошибка SQL: " + e.getMessage() + sql);
-            throw new RuntimeException("Ошибка при поиске пользователей", e);
-        }
-        return users;
     }
 
     /**
@@ -174,50 +140,23 @@ public class UserServiceImpl implements UserService {
      *
      * <p>Метод обновляет имя, пароль и роль пользователя с указанным идентификатором.</p>
      *
-     * @param id          уникальный идентификатор пользователя, которого нужно обновить
-     * @param updatedUser объект {@link User} с новыми данными
+     * @param id             уникальный идентификатор пользователя, которого нужно обновить
+     * @param updatedUserDTO объект {@link User} с новыми данными
      * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
      */
+    @Loggable("Логирование метода UserServiceImpl.updateUser")
     @Override
-    public void updateUser(int id, User updatedUser) {
-        String sql = "UPDATE car_shop.users SET username = ?, password = ?, role = ? WHERE id = ?";
+    public void updateUser(int id, UserDTO updatedUserDTO) {
         try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, updatedUser.username());
-            pstmt.setString(2, updatedUser.password());
-            pstmt.setString(3, updatedUser.role().toString());
-            pstmt.setInt(4, id);
-            pstmt.executeUpdate();
+             PreparedStatement preparedStatement = conn.prepareStatement(SqlScriptsForUsers.UPDATE_USER)) {
+            preparedStatement.setString(1, updatedUserDTO.getUsername());
+            preparedStatement.setString(2, updatedUserDTO.getPassword());
+            preparedStatement.setString(3, updatedUserDTO.getRole().toString());
+            preparedStatement.setInt(4, id);
+            preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Ошибка SQL: " + e.getMessage() + sql);
+            System.err.println("Ошибка SQL: " + e.getMessage());
             throw new RuntimeException("Ошибка при обновлении пользователя", e);
-        }
-    }
-
-    /**
-     * Удаляет пользователя по уникальному идентификатору.
-     *
-     * <p>Если пользователь с указанным идентификатором существует, он будет удален из базы данных.
-     * В противном случае будет выведено сообщение о том, что пользователь не найден.</p>
-     *
-     * @param id уникальный идентификатор пользователя, которого нужно удалить
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
-    @Override
-    public void deleteUser(int id) {
-        String sql = "DELETE FROM car_shop.users WHERE id = ?";
-        try (Connection conn = DatabaseConnectionManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                System.out.println("Пользователь успешно удален.");
-            } else {
-                System.out.println("Пользователь не найден.");
-            }
-        } catch (SQLException e) {
-            System.err.println("Ошибка SQL: " + e.getMessage() + sql);
-            throw new RuntimeException("Ошибка при удалении пользователя", e);
         }
     }
 }
