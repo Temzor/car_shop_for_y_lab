@@ -51,7 +51,7 @@ public interface CarService {
      *
      * @param id идентификатор автомобиля, который необходимо удалить
      */
-    void deleteCar(int id);
+    void deleteCarById(int id);
 
     /**
      * Ищет автомобили по заданным критериям.

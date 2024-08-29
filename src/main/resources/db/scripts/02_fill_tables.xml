@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="user">
+        <!-- Заполняем таблицу users данными -->
+        <insert tableName="users" schemaName="car_shop">
+            <column name="username" value="1"/>
+            <column name="password" value="1"/>
+            <column name="role" value="ADMIN"/>
+        </insert>
+        <insert tableName="users" schemaName="car_shop">
+            <column name="username" value="2"/>
+            <column name="password" value="2"/>
+            <column name="role" value="MANAGER"/>
+        </insert>
+        <insert tableName="users" schemaName="car_shop">
+            <column name="username" value="3"/>
+            <column name="password" value="3"/>
+            <column name="role" value="CLIENT"/>
+        </insert>
+    </changeSet>
+    <changeSet id="2" author="user">
+        <!-- Заполняем таблицу clients данными -->
+        <insert tableName="clients" schemaName="car_shop">
+            <column name="client_name" value="John Smith"/>
+            <column name="contact_info" value="john.smith@example.com"/>
+        </insert>
+        <insert tableName="clients" schemaName="car_shop">
+            <column name="client_name" value="Jane Doe"/>
+            <column name="contact_info" value="jane.doe@example.com"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="3" author="user">
+        <!-- Заполняем таблицу cars данными -->
+        <insert tableName="cars" schemaName="car_shop">
+            <column name="make" value="Toyota"/>
+            <column name="model" value="Camry"/>
+            <column name="year" valueNumeric="2020"/>
+            <column name="price" valueNumeric="24000"/>
+            <column name="condition" value="NEW"/>
+        </insert>
+        <insert tableName="cars" schemaName="car_shop">
+            <column name="make" value="Honda"/>
+            <column name="model" value="Civic"/>
+            <column name="year" valueNumeric="2019"/>
+            <column name="price" valueNumeric="20000"/>
+            <column name="condition" value="USED"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="4" author="user">
+        <!-- Заполняем таблицу orders данными -->
+        <insert tableName="orders" schemaName="car_shop">
+            <column name="client_id" valueNumeric="1"/>
+            <column name="car_id" valueNumeric="1"/>
+            <column name="creation_date" valueDate="2023-01-01 10:00:00"/>
+            <column name="status" value="PENDING"/>
+        </insert>
+        <insert tableName="orders" schemaName="car_shop">
+            <column name="client_id" valueNumeric="2"/>
+            <column name="car_id" valueNumeric="2"/>
+            <column name="creation_date" valueDate="2023-02-01 11:00:00"/>
+            <column name="status" value="COMPLETED"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="5" author="user">
+        <!-- Заполняем таблицу audit_logs данными -->
+        <insert tableName="audit_logs" schemaName="car_shop">
+            <column name="user_id" valueComputed="(SELECT id FROM car_shop.users LIMIT 1)"/>
+            <column name="log_message" value="Юзер произвел вход"/>
+            <column name="log_date" value="2023-01-01 10:00:00"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

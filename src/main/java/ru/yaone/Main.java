@@ -1,6 +1,7 @@
 package ru.yaone;
 
 import ru.yaone.app.CarShopApp;
+import ru.yaone.manager.DatabaseConnectionManager;
 
 /**
  * Главный класс приложения CarShop.
@@ -17,6 +18,10 @@ public class Main {
      * @param args аргументы командной строки (не используются)
      */
     public static void main(String[] args) {
-        new CarShopApp().run();
+        try {
+            new CarShopApp().run();
+        } finally {
+            DatabaseConnectionManager.closeConnection();
+        }
     }
 }
