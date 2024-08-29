@@ -8,9 +8,6 @@ package ru.yaone.constants;
  *
  * <p>Запросы позволяют добавлять, извлекать, обновлять и удалять записи о автомобилях
  * из таблицы {@code cars} в базе данных.</p>
- *
- * @author Ваше имя
- * @version 1.0
  */
 public class SqlScriptsForCar {
 

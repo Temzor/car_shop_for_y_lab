@@ -1,5 +1,6 @@
 package ru.yaone.model;
 
+import lombok.NoArgsConstructor;
 import ru.yaone.model.enumeration.CarCondition;
 
 /**
@@ -18,6 +19,5 @@ import ru.yaone.model.enumeration.CarCondition;
  * @param price     цена автомобиля
  * @param condition состояние автомобиля
  */
-
-public record Car(int id, String make, String model, int year, double price, CarCondition condition) {
+public record Car(Integer id, String make, String model, int year, double price, CarCondition condition) {
 }

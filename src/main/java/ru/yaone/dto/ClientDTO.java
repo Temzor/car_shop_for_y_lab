@@ -1,9 +1,6 @@
 package ru.yaone.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -11,14 +8,11 @@ import jakarta.validation.constraints.NotBlank;
  *
  * <p>Содержит информацию о клиенте, включая его идентификатор, имя и контактные данные.
  * Этот класс используется для передачи данных между слоями приложения.</p>
- *
- * @author Ваше имя
- * @version 1.0
  */
-@Setter
-@Getter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class ClientDTO {
 
     /**

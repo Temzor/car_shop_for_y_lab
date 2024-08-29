@@ -8,9 +8,6 @@ package ru.yaone.constants;
  *
  * <p>Запросы позволяют добавлять, извлекать, обновлять и удалять записи о пользователях
  * из таблицы {@code users} в базе данных.</p>
- *
- * @author Ваше имя
- * @version 1.0
  */
 public class SqlScriptsForUsers {
 

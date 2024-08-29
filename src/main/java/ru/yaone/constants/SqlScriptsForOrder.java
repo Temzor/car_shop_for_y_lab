@@ -8,9 +8,6 @@ package ru.yaone.constants;
  *
  * <p>Запросы позволяют добавлять, извлекать, обновлять и удалять записи о заказах
  * из таблицы {@code orders} в базе данных.</p>
- *
- * @version 1.0
- * @autor Ваше имя
  */
 public class SqlScriptsForOrder {
 

@@ -4,10 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import ru.yaone.model.enumeration.UserRole;
 
 /**
@@ -16,12 +13,8 @@ import ru.yaone.model.enumeration.UserRole;
  * <p>Содержит информацию о пользователе, включая уникальный идентификатор,
  * имя пользователя, пароль и роль пользователя. Этот класс используется для передачи данных
  * между слоями приложения.</p>
- *
- * @author Ваше имя
- * @version 1.0
  */
-@Setter
-@Getter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {

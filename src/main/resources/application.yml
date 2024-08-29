@@ -1,0 +1,15 @@
+server:
+  port: 8080
+  servlet:
+    context-path: "/${spring.application.api-version}"
+spring:
+  liquibase:
+    enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5440/car_shop_db
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true

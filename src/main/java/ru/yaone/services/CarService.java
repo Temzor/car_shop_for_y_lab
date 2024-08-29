@@ -1,6 +1,6 @@
 package ru.yaone.services;
 
-import ru.yaone.dto.CarDTO;
+import ru.yaone.model.Car;
 import ru.yaone.model.enumeration.CarCondition;
 
 import java.util.List;
@@ -18,16 +18,16 @@ public interface CarService {
     /**
      * Добавляет новый автомобиль в систему.
      *
-     * @param carDTO объект автомобиля, который необходимо добавить
+     * @param car объект автомобиля, который необходимо добавить
      */
-    void addCar(CarDTO carDTO);
+    void addCar(Car car);
 
     /**
      * Получает список всех автомобилей в системе.
      *
      * @return список всех автомобилей
      */
-    List<CarDTO> getAllCars();
+    List<Car> getAllCars();
 
     /**
      * Получает автомобиль по его идентификатору.
@@ -36,9 +36,9 @@ public interface CarService {
      * @return объект автомобиля с указанным идентификатором или null,
      * если автомобиль не найден
      */
-    CarDTO getCarById(int id);
+    Car getCarById(int id);
 
-    void updateCar(int id, CarDTO updatedCarDTO);
+    void updateCar(int id, Car updatedCarDTO);
 
     /**
      * Удаляет автомобиль из системы по его идентификатору.
@@ -57,5 +57,5 @@ public interface CarService {
      * @param condition состояние автомобиля
      * @return список автомобилей, удовлетворяющих заданным критериям
      */
-    List<CarDTO> searchCars(String make, String model, int year, double price, CarCondition condition);
+    List<Car> searchCars(String make, String model, int year, double price, CarCondition condition);
 }
