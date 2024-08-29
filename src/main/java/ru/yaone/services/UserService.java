@@ -1,6 +1,5 @@
 package ru.yaone.services;
 
-import ru.yaone.dto.UserDTO;
 import ru.yaone.model.User;
 
 import java.util.List;

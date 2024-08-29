@@ -6,8 +6,6 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 import ru.yaone.model.enumeration.CarCondition;
 
-@Setter
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

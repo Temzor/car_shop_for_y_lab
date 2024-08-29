@@ -61,7 +61,7 @@ public class CarDTOValidatorTest {
     }
 
     @Test
-    @DisplayName("Тест: цена автомобиля не может быть меньше нуля" )
+    @DisplayName("Тест: цена автомобиля не может быть меньше нуля")
     public void testNullPriceCar() {
         CarDTO carDTO = new CarDTO(1, "Ford", "Mustang", 2021, -100, null);
         List<String> validationResult = CarDTOValidator.validate(carDTO);

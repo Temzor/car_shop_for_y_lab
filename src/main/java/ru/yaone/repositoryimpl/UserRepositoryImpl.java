@@ -1,37 +1,26 @@
-package ru.yaone.impl;
+package ru.yaone.repositoryimpl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.constants.SqlScriptsForUsers;
 import ru.yaone.model.User;
 import ru.yaone.model.enumeration.UserRole;
-import ru.yaone.services.UserService;
+import ru.yaone.repository.UserRepository;
 import ru.yaone.manager.DatabaseConnectionManager;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Реализация сервиса пользователей для управления операциями с пользователями.
- */
-@Service
+
+@Repository
 @Loggable("Логирование класса UserServiceImpl")
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserRepositoryImpl implements UserRepository {
 
     private final DatabaseConnectionManager databaseConnectionManager;
 
-    /**
-     * Добавляет нового пользователя в базу данных.
-     *
-     * <p>Перед добавлением проверяет, не занято ли имя пользователя. Если имя занято,
-     * выбрасывается RuntimeException. Если имя свободно, пользователь добавляется в базу данных.</p>
-     *
-     * @param user объект пользователя, который необходимо добавить в систему
-     * @throws RuntimeException если имя пользователя уже занято или произошла ошибка во время SQL-запроса
-     */
     @Loggable("Логирование метода UserServiceImpl.addUser")
     @Override
     public void addUser(User user) {
@@ -55,13 +44,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    /**
-     * Проверяет, занято ли указанное имя пользователя.
-     *
-     * @param username имя пользователя для проверки
-     * @return true, если имя пользователя занято; false в противном случае
-     * @throws RuntimeException если произошла ошибка во время SQL-запроса
-     */
     @Loggable("Логирование метода UserServiceImpl.isUsernameTaken")
     private boolean isUsernameTaken(String username) {
         try (Connection conn = databaseConnectionManager.getConnection();
@@ -79,12 +61,6 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
-    /**
-     * Получает список всех пользователей из базы данных.
-     *
-     * @return список пользователей
-     * @throws RuntimeException если произошла ошибка во время SQL-запроса
-     */
     @Loggable("Логирование метода UserServiceImpl.getAllUsers")
     @Override
     public List<User> getAllUsers() {
@@ -108,16 +84,6 @@ public class UserServiceImpl implements UserService {
         return users;
     }
 
-    /**
-     * Получает пользователя по уникальному идентификатору.
-     *
-     * <p>Если пользователь с указанным идентификатором существует, метод возвращает объект типа
-     * {@link User}, иначе возвращает null.</p>
-     *
-     * @param id уникальный идентификатор пользователя
-     * @return объект {@link User} с данными пользователя или null, если пользователь не найден
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
     @Loggable("Логирование метода UserServiceImpl.getUserById")
     @Override
     public User getUserById(int id) {
@@ -141,15 +107,6 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    /**
-     * Обновляет информацию о пользователе.
-     *
-     * <p>Метод обновляет имя, пароль и роль пользователя с указанным идентификатором.</p>
-     *
-     * @param id          уникальный идентификатор пользователя, которого нужно обновить
-     * @param updatedUser объект {@link User} с новыми данными
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
     @Loggable("Логирование метода UserServiceImpl.updateUser")
     @Override
     public void updateUser(int id, User updatedUser) {

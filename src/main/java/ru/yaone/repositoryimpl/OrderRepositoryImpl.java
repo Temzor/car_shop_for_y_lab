@@ -1,7 +1,7 @@
-package ru.yaone.impl;
+package ru.yaone.repositoryimpl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 import ru.yaone.aspect.annotation.Loggable;
 import ru.yaone.constants.SqlScriptsForOrder;
 import ru.yaone.manager.DatabaseConnectionManager;
@@ -10,23 +10,20 @@ import ru.yaone.model.Client;
 import ru.yaone.model.Order;
 import ru.yaone.model.enumeration.CarCondition;
 import ru.yaone.model.enumeration.OrderStatus;
-import ru.yaone.services.OrderService;
+import ru.yaone.repository.OrderRepository;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Реализация интерфейса OrderService, предоставляющая методы для работы с заказами в системе.
- */
-@Service
-@Loggable("Логирование класса OrderServiceImpl")
+@Repository
+@Loggable("Логирование класса OrderRepositoryImpl")
 @RequiredArgsConstructor
-public class OrderServiceImpl implements OrderService {
+public class OrderRepositoryImpl implements OrderRepository {
     private final DatabaseConnectionManager databaseConnectionManager;
 
-
+    @Loggable("Логирование метода OrderRepositoryImpl.getAllOrders")
     @Override
     public void addOrder(Order order) {
         try (Connection conn = databaseConnectionManager.getConnection();
@@ -46,16 +43,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    /**
-     * Получает все заказы из базы данных.
-     *
-     * <p>Метод выполняет SQL-запрос для получения всех заказов из таблицы <code>orders</code>,
-     * включая информацию о клиенте и автомобиле. Возвращает список заказов.</p>
-     *
-     * @return список объектов Order, представляющих все заказы в системе
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
-    @Loggable("Логирование метода OrderServiceImpl.getAllOrders")
+    @Loggable("Логирование метода OrderRepositoryImpl.getAllOrders")
     @Override
     public List<Order> getAllOrders() {
         List<Order> orders = new ArrayList<>();
@@ -92,17 +80,7 @@ public class OrderServiceImpl implements OrderService {
         return orders;
     }
 
-    /**
-     * Получает заказ из базы данных по заданному идентификатору.
-     *
-     * <p>Метод выполняет SQL-запрос для получения заказа на основе его идентификатора.
-     * Если заказ с данным ID найден, возвращает объект Order; если нет, возвращает null.</p>
-     *
-     * @param id идентификатор заказа, который необходимо получить
-     * @return объект Order, представляющий заказ с заданным идентификатором, или null, если заказ не найден
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
-    @Loggable("Логирование метода OrderServiceImpl.getOrderById")
+    @Loggable("Логирование метода OrderRepositoryImpl.getOrderById")
     @Override
     public Order getOrderById(int id) {
         try (Connection conn = databaseConnectionManager.getConnection();
@@ -138,17 +116,7 @@ public class OrderServiceImpl implements OrderService {
         return null;
     }
 
-    /**
-     * Обновляет информацию о заказе в базе данных по заданному идентификатору.
-     *
-     * <p>Метод выполняет SQL-запрос для обновления данных о заказе в таблице <code>orders</code>.
-     * Если заказ с заданным ID найден, данные будут обновлены.</p>
-     *
-     * @param id           идентификатор заказа, который необходимо обновить
-     * @param updatedOrder объект Order с обновленными данными
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
-    @Loggable("Логирование метода OrderServiceImpl.updateOrder")
+    @Loggable("Логирование метода OrderRepositoryImpl.updateOrder")
     @Override
     public void updateOrder(int id, Order updatedOrder) {
         try (Connection conn = databaseConnectionManager.getConnection();
@@ -170,16 +138,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    /**
-     * Удаляет заказ из базы данных по заданному идентификатору.
-     *
-     * <p>Метод выполняет SQL-запрос для удаления заказа из таблицы <code>orders</code>.
-     * Если заказ с указанным ID найден, он будет удален из базы данных.</p>
-     *
-     * @param id идентификатор заказа, который необходимо удалить
-     * @throws RuntimeException если произошла ошибка во время выполнения SQL-запроса
-     */
-    @Loggable("Логирование метода OrderServiceImpl.deleteOrderById")
+    @Loggable("Логирование метода OrderRepositoryImpl.deleteOrderById")
     @Override
     public boolean deleteOrder(int id) {
         try (Connection conn = databaseConnectionManager.getConnection();

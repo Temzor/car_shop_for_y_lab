@@ -9,8 +9,7 @@ import jakarta.validation.constraints.NotBlank;
  * <p>Содержит информацию о клиенте, включая его идентификатор, имя и контактные данные.
  * Этот класс используется для передачи данных между слоями приложения.</p>
  */
-@Setter
-@Getter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString

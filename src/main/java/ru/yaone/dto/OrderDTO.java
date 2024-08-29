@@ -14,8 +14,6 @@ import java.time.Instant;
  * идентификатор клиента, идентификатор автомобиля, дату создания заказа и статус заказа.
  * Этот класс используется для передачи данных между слоями приложения.</p>
  */
-@Setter
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
